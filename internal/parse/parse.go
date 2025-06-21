@@ -61,7 +61,7 @@ func findSubTestsInStmt(stmt ast.Stmt) []*SubTest {
 		if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 {
 			return nil
 		}
-		subtestName := "<?>"
+		subtestName := "<unknown>"
 		if arg, ok := call.Args[0].(*ast.BasicLit); ok {
 			subtestName = strings.Trim(arg.Value, `"`)
 		}
@@ -102,15 +102,16 @@ func PrintTestFunctions(tests map[string][]*TestFunction) {
 func printTestFunction(tf *TestFunction) {
 	fmt.Printf("- %s\n", tf.name)
 	if len(tf.subs) > 0 {
-		printSubTests(tf.subs, "  ")
+		printSubTests(tf.subs, 1)
 	}
 }
 
-func printSubTests(subs []*SubTest, indent string) {
+func printSubTests(subs []*SubTest, indentLevel int) {
+	indent := strings.Repeat("  ", indentLevel)
 	for _, sub := range subs {
 		fmt.Printf("%s- %s\n", indent, sub.name)
 		if len(sub.subs) > 0 {
-			printSubTests(sub.subs, indent+"  ")
+			printSubTests(sub.subs, indentLevel+1)
 		}
 	}
 }
