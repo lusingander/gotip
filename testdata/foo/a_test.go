@@ -33,3 +33,17 @@ func TestA2(t *testing.T) {
 		})
 	}
 }
+
+func TestA3(t *testing.T) {
+	for i := 0; i < 3; i++ {
+		t.Run("test"+string(i), func(t *testing.T) {
+			a := i + 1
+			b := i + 2
+			got := a + b
+			want := 3 + i
+			if got != want {
+				t.Errorf("got %d, want %d", got, want)
+			}
+		})
+	}
+}

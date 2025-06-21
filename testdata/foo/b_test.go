@@ -3,6 +3,8 @@ package foo
 import "testing"
 
 func TestB1(t *testing.T) {
+	helperFunc(t)
+
 	t.Run("test1", func(t *testing.T) {
 		a := 1
 		b := 2
@@ -21,4 +23,8 @@ func TestB1(t *testing.T) {
 			t.Errorf("got %d, want %d", got, want)
 		}
 	})
+}
+
+func helperFunc(t *testing.T) {
+	t.Helper()
 }
