@@ -31,30 +31,35 @@ func ProcessFile(path string) ([]*TestFunction, error) {
 		if !ok || !strings.HasPrefix(fn.Name.Name, "Test") {
 			continue
 		}
-		subs, err := parseTestFunction(fn)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse test function %s: %w", fn.Name.Name, err)
-		}
 		testFunction := &TestFunction{
 			name: fn.Name.Name,
 			path: path,
-			subs: subs,
+			subs: parseTestFunction(fn.Body),
 		}
 		testFunctions = append(testFunctions, testFunction)
 	}
 	return testFunctions, nil
 }
 
-func parseTestFunction(fn *ast.FuncDecl) ([]*SubTest, error) {
+func parseTestFunction(fnBody *ast.BlockStmt) []*SubTest {
 	subs := make([]*SubTest, 0)
-	ast.Inspect(fn.Body, func(n ast.Node) bool {
-		call, ok := n.(*ast.CallExpr)
+	for _, stmt := range fnBody.List {
+		subs = append(subs, findSubTestsInStmt(stmt)...)
+	}
+	return subs
+}
+
+func findSubTestsInStmt(stmt ast.Stmt) []*SubTest {
+	subs := make([]*SubTest, 0)
+	switch s := stmt.(type) {
+	case *ast.ExprStmt:
+		call, ok := s.X.(*ast.CallExpr)
 		if !ok {
-			return true
+			return nil
 		}
 		sel, ok := call.Fun.(*ast.SelectorExpr)
-		if !ok || sel.Sel.Name != "Run" {
-			return true
+		if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 {
+			return nil
 		}
 		subtestName := "<?>"
 		if arg, ok := call.Args[0].(*ast.BasicLit); ok {
@@ -62,12 +67,26 @@ func parseTestFunction(fn *ast.FuncDecl) ([]*SubTest, error) {
 		}
 		subtest := &SubTest{
 			name: subtestName,
-			subs: nil, // todo: parse nested subtests if needed
+			subs: nil,
+		}
+		if fnLit, ok := call.Args[1].(*ast.FuncLit); ok {
+			subtest.subs = parseTestFunction(fnLit.Body)
 		}
 		subs = append(subs, subtest)
-		return true
-	})
-	return subs, nil
+	case *ast.BlockStmt:
+		for _, innerStmt := range s.List {
+			subs = append(subs, findSubTestsInStmt(innerStmt)...)
+		}
+	case *ast.ForStmt:
+		for _, innerStmt := range s.Body.List {
+			subs = append(subs, findSubTestsInStmt(innerStmt)...)
+		}
+	case *ast.RangeStmt:
+		for _, innerStmt := range s.Body.List {
+			subs = append(subs, findSubTestsInStmt(innerStmt)...)
+		}
+	}
+	return subs
 }
 
 func PrintTestFunctions(tests map[string][]*TestFunction) {
