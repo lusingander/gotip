@@ -1,6 +1,9 @@
 package foo
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestA1(t *testing.T) {
 	a := 1
@@ -63,6 +66,20 @@ func TestA4(t *testing.T) {
 			got := tt.a + tt.b
 			if got != tt.want {
 				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestA5(t *testing.T) {
+	for i := 0; i < 3; i++ {
+		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
+			a := i + 1
+			b := i + 2
+			got := a + b
+			want := 3 + i
+			if got != want {
+				t.Errorf("got %d, want %d", got, want)
 			}
 		})
 	}
