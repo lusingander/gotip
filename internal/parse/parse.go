@@ -31,13 +31,13 @@ func ProcessFile(path string) ([]*TestFunction, error) {
 		if !ok || !strings.HasPrefix(fn.Name.Name, "Test") {
 			continue
 		}
-		testFunctions = append(testFunctions, parseTestFunction(fn, path))
+		testFunctions = append(testFunctions, processTestFunction(fn, path))
 	}
 	return testFunctions, nil
 }
 
-func parseTestFunction(fn *ast.FuncDecl, path string) *TestFunction {
-	unresolvedSubTests := parseTestFunctionBody(fn.Body)
+func processTestFunction(fn *ast.FuncDecl, path string) *TestFunction {
+	unresolvedSubTests := findSubTests(fn.Body.List)
 
 	subs := make([]*SubTest, len(unresolvedSubTests))
 	for i, sub := range unresolvedSubTests {
@@ -51,44 +51,32 @@ func parseTestFunction(fn *ast.FuncDecl, path string) *TestFunction {
 	}
 }
 
-func parseTestFunctionBody(fnBody *ast.BlockStmt) []*unresolvedSubTest {
+func findSubTests(stmts []ast.Stmt) []*unresolvedSubTest {
 	subs := make([]*unresolvedSubTest, 0)
-	for _, stmt := range fnBody.List {
-		subs = append(subs, findSubTestsInStmt(stmt)...)
-	}
-	return subs
-}
-
-func findSubTestsInStmt(stmt ast.Stmt) []*unresolvedSubTest {
-	subs := make([]*unresolvedSubTest, 0)
-	switch s := stmt.(type) {
-	case *ast.ExprStmt:
-		call, ok := s.X.(*ast.CallExpr)
-		if !ok {
-			return nil
-		}
-		sel, ok := call.Fun.(*ast.SelectorExpr)
-		if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 {
-			return nil
-		}
-		subs = append(subs, parseSubTest(call.Args))
-	case *ast.BlockStmt:
-		for _, innerStmt := range s.List {
-			subs = append(subs, findSubTestsInStmt(innerStmt)...)
-		}
-	case *ast.ForStmt:
-		for _, innerStmt := range s.Body.List {
-			subs = append(subs, findSubTestsInStmt(innerStmt)...)
-		}
-	case *ast.RangeStmt:
-		for _, innerStmt := range s.Body.List {
-			subs = append(subs, findSubTestsInStmt(innerStmt)...)
+	for _, stmt := range stmts {
+		switch s := stmt.(type) {
+		case *ast.ExprStmt:
+			call, ok := s.X.(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+			sel, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 {
+				continue
+			}
+			subs = append(subs, findSubTest(call.Args))
+		case *ast.BlockStmt:
+			subs = append(subs, findSubTests(s.List)...)
+		case *ast.ForStmt:
+			subs = append(subs, findSubTests(s.Body.List)...)
+		case *ast.RangeStmt:
+			subs = append(subs, findSubTests(s.Body.List)...)
 		}
 	}
 	return subs
 }
 
-func parseSubTest(exprs []ast.Expr) *unresolvedSubTest {
+func findSubTest(exprs []ast.Expr) *unresolvedSubTest {
 	var name unresolvedSubTestName = &unknownSubTestName{}
 
 	switch e := exprs[0].(type) {
@@ -117,7 +105,7 @@ func parseSubTest(exprs []ast.Expr) *unresolvedSubTest {
 
 	var subs []*unresolvedSubTest
 	if fnLit, ok := exprs[1].(*ast.FuncLit); ok {
-		subs = parseTestFunctionBody(fnLit.Body)
+		subs = findSubTests(fnLit.Body.List)
 	}
 
 	return &unresolvedSubTest{
