@@ -37,23 +37,30 @@ func ProcessFile(path string) ([]*TestFunction, error) {
 }
 
 func parseTestFunction(fn *ast.FuncDecl, path string) *TestFunction {
+	unresolvedSubTests := parseTestFunctionBody(fn.Body)
+
+	subs := make([]*SubTest, len(unresolvedSubTests))
+	for i, sub := range unresolvedSubTests {
+		subs[i] = sub.resolve()
+	}
+
 	return &TestFunction{
 		name: fn.Name.Name,
 		path: path,
-		subs: parseTestFunctionBody(fn.Body),
+		subs: subs,
 	}
 }
 
-func parseTestFunctionBody(fnBody *ast.BlockStmt) []*SubTest {
-	subs := make([]*SubTest, 0)
+func parseTestFunctionBody(fnBody *ast.BlockStmt) []*unresolvedSubTest {
+	subs := make([]*unresolvedSubTest, 0)
 	for _, stmt := range fnBody.List {
 		subs = append(subs, findSubTestsInStmt(stmt)...)
 	}
 	return subs
 }
 
-func findSubTestsInStmt(stmt ast.Stmt) []*SubTest {
-	subs := make([]*SubTest, 0)
+func findSubTestsInStmt(stmt ast.Stmt) []*unresolvedSubTest {
+	subs := make([]*unresolvedSubTest, 0)
 	switch s := stmt.(type) {
 	case *ast.ExprStmt:
 		call, ok := s.X.(*ast.CallExpr)
@@ -64,14 +71,7 @@ func findSubTestsInStmt(stmt ast.Stmt) []*SubTest {
 		if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 {
 			return nil
 		}
-		subtest := &SubTest{
-			name: resolveSubTestName(call.Args[0]),
-			subs: nil,
-		}
-		if fnLit, ok := call.Args[1].(*ast.FuncLit); ok {
-			subtest.subs = parseTestFunctionBody(fnLit.Body)
-		}
-		subs = append(subs, subtest)
+		subs = append(subs, parseSubTest(call.Args))
 	case *ast.BlockStmt:
 		for _, innerStmt := range s.List {
 			subs = append(subs, findSubTestsInStmt(innerStmt)...)
@@ -88,13 +88,94 @@ func findSubTestsInStmt(stmt ast.Stmt) []*SubTest {
 	return subs
 }
 
-func resolveSubTestName(expr ast.Expr) string {
-	switch e := expr.(type) {
+func parseSubTest(exprs []ast.Expr) *unresolvedSubTest {
+	var name unresolvedSubTestName = &unknownSubTestName{}
+
+	switch e := exprs[0].(type) {
 	case *ast.BasicLit:
 		if e.Kind == token.STRING {
-			return strings.Trim(e.Value, `"`)
+			name = &literalSubTestName{
+				name: strings.Trim(e.Value, `"`),
+			}
 		}
+	case *ast.SelectorExpr:
+		name = &selectorSubTestName{
+			receiver: e.X.(*ast.Ident).Name,
+			field:    e.Sel.Name,
+		}
+	case *ast.Ident:
+		name = &identSubTestName{
+			name: e.Name,
+		}
+	case *ast.BinaryExpr:
+		// If it's a binary expression, we can't resolve it to a specific name without more context.
+		// This might happen in cases like `t.Run("test"+string(i), ...)`.
+	case *ast.CallExpr:
+		// If it's a call expression, we can't resolve it to a specific name without more context
+		// This might happen in cases like `t.Run(fmt.Sprintf("test%d", i), ...)`.
 	}
+
+	var subs []*unresolvedSubTest
+	if fnLit, ok := exprs[1].(*ast.FuncLit); ok {
+		subs = parseTestFunctionBody(fnLit.Body)
+	}
+
+	return &unresolvedSubTest{
+		name: name,
+		subs: subs,
+	}
+}
+
+type unresolvedSubTest struct {
+	name unresolvedSubTestName
+	subs []*unresolvedSubTest
+}
+
+func (t *unresolvedSubTest) resolve() *SubTest {
+	subTests := make([]*SubTest, len(t.subs))
+	for i, sub := range t.subs {
+		subTests[i] = sub.resolve()
+	}
+	return &SubTest{
+		name: t.name.resolveTestName(),
+		subs: subTests,
+	}
+}
+
+type unresolvedSubTestName interface {
+	resolveTestName() string
+}
+
+type literalSubTestName struct {
+	name string
+}
+
+func (l *literalSubTestName) resolveTestName() string {
+	return l.name
+}
+
+type selectorSubTestName struct {
+	receiver string
+	field    string
+}
+
+func (s *selectorSubTestName) resolveTestName() string {
+	// todo: resolve the selector to a specific name if possible
+	return fmt.Sprintf("%s.%s", s.receiver, s.field)
+}
+
+type identSubTestName struct {
+	name string
+}
+
+func (i *identSubTestName) resolveTestName() string {
+	// todo: resolve the identifier to a specific name if possible
+	return i.name
+}
+
+type unknownSubTestName struct{}
+
+func (u *unknownSubTestName) resolveTestName() string {
 	return "<unknown>"
 }
 
