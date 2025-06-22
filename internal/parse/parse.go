@@ -31,17 +31,20 @@ func ProcessFile(path string) ([]*TestFunction, error) {
 		if !ok || !strings.HasPrefix(fn.Name.Name, "Test") {
 			continue
 		}
-		testFunction := &TestFunction{
-			name: fn.Name.Name,
-			path: path,
-			subs: parseTestFunction(fn.Body),
-		}
-		testFunctions = append(testFunctions, testFunction)
+		testFunctions = append(testFunctions, parseTestFunction(fn, path))
 	}
 	return testFunctions, nil
 }
 
-func parseTestFunction(fnBody *ast.BlockStmt) []*SubTest {
+func parseTestFunction(fn *ast.FuncDecl, path string) *TestFunction {
+	return &TestFunction{
+		name: fn.Name.Name,
+		path: path,
+		subs: parseTestFunctionBody(fn.Body),
+	}
+}
+
+func parseTestFunctionBody(fnBody *ast.BlockStmt) []*SubTest {
 	subs := make([]*SubTest, 0)
 	for _, stmt := range fnBody.List {
 		subs = append(subs, findSubTestsInStmt(stmt)...)
@@ -61,16 +64,12 @@ func findSubTestsInStmt(stmt ast.Stmt) []*SubTest {
 		if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 {
 			return nil
 		}
-		subtestName := "<unknown>"
-		if arg, ok := call.Args[0].(*ast.BasicLit); ok {
-			subtestName = strings.Trim(arg.Value, `"`)
-		}
 		subtest := &SubTest{
-			name: subtestName,
+			name: resolveSubTestName(call.Args[0]),
 			subs: nil,
 		}
 		if fnLit, ok := call.Args[1].(*ast.FuncLit); ok {
-			subtest.subs = parseTestFunction(fnLit.Body)
+			subtest.subs = parseTestFunctionBody(fnLit.Body)
 		}
 		subs = append(subs, subtest)
 	case *ast.BlockStmt:
@@ -87,6 +86,16 @@ func findSubTestsInStmt(stmt ast.Stmt) []*SubTest {
 		}
 	}
 	return subs
+}
+
+func resolveSubTestName(expr ast.Expr) string {
+	switch e := expr.(type) {
+	case *ast.BasicLit:
+		if e.Kind == token.STRING {
+			return strings.Trim(e.Value, `"`)
+		}
+	}
+	return "<unknown>"
 }
 
 func PrintTestFunctions(tests map[string][]*TestFunction) {
