@@ -47,3 +47,23 @@ func TestA3(t *testing.T) {
 		})
 	}
 }
+
+func TestA4(t *testing.T) {
+	tests := map[string]struct {
+		a    int
+		b    int
+		want int
+	}{
+		"test1": {a: 1, b: 2, want: 3},
+		"test2": {a: 2, b: 3, want: 5},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tt.a + tt.b
+			if got != tt.want {
+				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
