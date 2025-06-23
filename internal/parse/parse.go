@@ -9,7 +9,6 @@ import (
 )
 
 type TestFunction struct {
-	path string
 	name string
 	subs []*SubTest
 }
@@ -31,12 +30,12 @@ func ProcessFile(path string) ([]*TestFunction, error) {
 		if !ok || !strings.HasPrefix(fn.Name.Name, "Test") {
 			continue
 		}
-		testFunctions = append(testFunctions, processTestFunction(fn, path))
+		testFunctions = append(testFunctions, processTestFunction(fn))
 	}
 	return testFunctions, nil
 }
 
-func processTestFunction(fn *ast.FuncDecl, path string) *TestFunction {
+func processTestFunction(fn *ast.FuncDecl) *TestFunction {
 	unresolvedSubTests := findSubTests(fn.Body.List)
 
 	subs := make([]*SubTest, 0)
@@ -46,7 +45,6 @@ func processTestFunction(fn *ast.FuncDecl, path string) *TestFunction {
 
 	return &TestFunction{
 		name: fn.Name.Name,
-		path: path,
 		subs: subs,
 	}
 }
