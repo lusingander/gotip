@@ -104,44 +104,25 @@ func findStructSliceLiteralDeclaration(assign *ast.AssignStmt) *structSliceLiter
 }
 
 func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
-	var name unresolvedSubTestName = &unknownSubTestName{}
+	var name unresolvedSubTestName
 
 	switch e := exprs[0].(type) {
 	case *ast.BasicLit:
-		if e.Kind == token.STRING {
-			name = &literalSubTestName{
-				name: strings.Trim(e.Value, `"`),
-			}
-		}
+		name = findSubTestNameFromBasicLit(e)
 	case *ast.SelectorExpr:
-		n := &selectorSubTestName{
-			receiver: e.X.(*ast.Ident).Name,
-			field:    e.Sel.Name,
-		}
-		for _, c := range cs {
-			if forRangeCtx, ok := c.(*forRangeContext); ok {
-				if n.receiver == forRangeCtx.valueIdent {
-					for _, c := range cs {
-						if structSliceCtx, ok := c.(*structSliceLiteralDeclarationContext); ok {
-							if structSliceCtx.ident == forRangeCtx.iterIdent {
-								n.cases = structSliceCtx.extractTestCaseName(n.field)
-							}
-						}
-					}
-				}
-			}
-		}
-		name = n
+		name = findSubTestNameFromSelectorExpr(e, cs...)
 	case *ast.Ident:
-		name = &identSubTestName{
-			name: e.Name,
-		}
+		name = findSubTestNameFromIdent(e)
 	case *ast.BinaryExpr:
 		// If it's a binary expression, we can't resolve it to a specific name without more context.
 		// This might happen in cases like `t.Run("test"+string(i), ...)`.
 	case *ast.CallExpr:
 		// If it's a call expression, we can't resolve it to a specific name without more context
 		// This might happen in cases like `t.Run(fmt.Sprintf("test%d", i), ...)`.
+	}
+
+	if name == nil {
+		name = &unknownSubTestName{}
 	}
 
 	var subs []*unresolvedSubTest
@@ -152,6 +133,48 @@ func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
 	return &unresolvedSubTest{
 		name: name,
 		subs: subs,
+	}
+}
+
+func findSubTestNameFromBasicLit(lit *ast.BasicLit) *literalSubTestName {
+	if lit.Kind != token.STRING {
+		return nil
+	}
+	return &literalSubTestName{
+		name: strings.Trim(lit.Value, `"`),
+	}
+}
+
+func findSubTestNameFromSelectorExpr(sel *ast.SelectorExpr, cs ...subTestContext) *selectorSubTestName {
+	n := &selectorSubTestName{
+		receiver: sel.X.(*ast.Ident).Name,
+		field:    sel.Sel.Name,
+	}
+	for _, c := range cs {
+		forRangeCtx, ok := c.(*forRangeContext)
+		if !ok {
+			continue
+		}
+		if n.receiver != forRangeCtx.valueIdent {
+			continue
+		}
+		for _, c := range cs {
+			structSliceCtx, ok := c.(*structSliceLiteralDeclarationContext)
+			if !ok {
+				continue
+			}
+			if structSliceCtx.ident != forRangeCtx.iterIdent {
+				continue
+			}
+			n.cases = structSliceCtx.extractTestCaseName(n.field)
+		}
+	}
+	return n
+}
+
+func findSubTestNameFromIdent(ident *ast.Ident) *identSubTestName {
+	return &identSubTestName{
+		name: ident.Name,
 	}
 }
 
@@ -224,15 +247,7 @@ type structSliceLiteralDeclarationContext struct {
 }
 
 func (c *structSliceLiteralDeclarationContext) extractTestCaseName(name string) []string {
-	caseFieldIdx := -1
-	if st, ok := c.compLit.Type.(*ast.ArrayType).Elt.(*ast.StructType); ok {
-		for i, field := range st.Fields.List {
-			if len(field.Names) == 1 && field.Names[0].Name == name {
-				caseFieldIdx = i
-				break
-			}
-		}
-	}
+	caseFieldIdx := c.findCaseNameFieldIndex(name)
 	ns := make([]string, 0)
 	for _, elt := range c.compLit.Elts {
 		st, ok := elt.(*ast.CompositeLit)
@@ -242,7 +257,7 @@ func (c *structSliceLiteralDeclarationContext) extractTestCaseName(name string) 
 		for i, elt := range st.Elts {
 			switch e := elt.(type) {
 			case *ast.BasicLit:
-				if e.Kind == token.STRING && i == caseFieldIdx {
+				if i == caseFieldIdx && e.Kind == token.STRING {
 					n := strings.Trim(e.Value, `"`)
 					ns = append(ns, n)
 				}
@@ -261,6 +276,17 @@ func (c *structSliceLiteralDeclarationContext) extractTestCaseName(name string) 
 		}
 	}
 	return ns
+}
+
+func (c *structSliceLiteralDeclarationContext) findCaseNameFieldIndex(name string) int {
+	if st, ok := c.compLit.Type.(*ast.ArrayType).Elt.(*ast.StructType); ok {
+		for i, field := range st.Fields.List {
+			if len(field.Names) == 1 && field.Names[0].Name == name {
+				return i
+			}
+		}
+	}
+	return -1
 }
 
 type forRangeContext struct {
