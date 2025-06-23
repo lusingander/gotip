@@ -5,10 +5,16 @@ import (
 	"io/fs"
 	"log"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/lusingander/gotip/internal/parse"
 )
+
+var ignore = []string{
+	"vendor",
+	"testdata",
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -17,10 +23,13 @@ func main() {
 }
 
 func run() error {
-	rootDir := "./testdata"
+	rootDir := "."
 	tests := make(map[string][]*parse.TestFunction)
 
 	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() && slices.Contains(ignore, d.Name()) {
+			return filepath.SkipDir
+		}
 		if err != nil || !strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
