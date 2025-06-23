@@ -15,7 +15,7 @@ func TestA1(t *testing.T) {
 	}
 }
 
-func TestA2(t *testing.T) {
+func TestA2_1(t *testing.T) {
 	tests := []struct {
 		name string
 		a    int
@@ -37,7 +37,7 @@ func TestA2(t *testing.T) {
 	}
 }
 
-func TestA3(t *testing.T) {
+func TestA2_2(t *testing.T) {
 	tests := []struct {
 		name string
 		a    int
@@ -59,7 +59,30 @@ func TestA3(t *testing.T) {
 	}
 }
 
-func TestA4(t *testing.T) {
+func TestA2_3(t *testing.T) {
+	type fixture struct {
+		name string
+		a    int
+		b    int
+		want int
+	}
+	tests := []fixture{
+		{name: "test1", a: 1, b: 2, want: 3},
+		{name: "test2", a: 2, b: 3, want: 5},
+		{name: "test3", a: 3, b: 4, want: 7},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.a + tt.b
+			if got != tt.want {
+				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestA3(t *testing.T) {
 	tests := map[string]struct {
 		a    int
 		b    int
@@ -79,7 +102,7 @@ func TestA4(t *testing.T) {
 	}
 }
 
-func TestA5(t *testing.T) {
+func TestA4(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		t.Run("test"+string(i), func(t *testing.T) {
 			a := i + 1
@@ -93,7 +116,7 @@ func TestA5(t *testing.T) {
 	}
 }
 
-func TestA6(t *testing.T) {
+func TestA5(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
 			a := i + 1

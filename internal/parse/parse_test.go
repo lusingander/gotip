@@ -31,7 +31,23 @@ func wantTestA() []*TestFunction {
 			subs: []*SubTest{},
 		},
 		{
-			name: "TestA2",
+			name: "TestA2_1",
+			subs: []*SubTest{
+				{name: "test1", subs: []*SubTest{}},
+				{name: "test2", subs: []*SubTest{}},
+				{name: "test3", subs: []*SubTest{}},
+			},
+		},
+		{
+			name: "TestA2_2",
+			subs: []*SubTest{
+				{name: "test1", subs: []*SubTest{}},
+				{name: "test2", subs: []*SubTest{}},
+				{name: "test3", subs: []*SubTest{}},
+			},
+		},
+		{
+			name: "TestA2_3",
 			subs: []*SubTest{
 				{name: "test1", subs: []*SubTest{}},
 				{name: "test2", subs: []*SubTest{}},
@@ -41,9 +57,7 @@ func wantTestA() []*TestFunction {
 		{
 			name: "TestA3",
 			subs: []*SubTest{
-				{name: "test1", subs: []*SubTest{}},
-				{name: "test2", subs: []*SubTest{}},
-				{name: "test3", subs: []*SubTest{}},
+				{name: "<unknown>", subs: []*SubTest{}},
 			},
 		},
 		{
@@ -54,12 +68,6 @@ func wantTestA() []*TestFunction {
 		},
 		{
 			name: "TestA5",
-			subs: []*SubTest{
-				{name: "<unknown>", subs: []*SubTest{}},
-			},
-		},
-		{
-			name: "TestA6",
 			subs: []*SubTest{
 				{name: "<unknown>", subs: []*SubTest{}},
 			},
