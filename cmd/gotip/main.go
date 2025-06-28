@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/lusingander/gotip/internal/parse"
+	"github.com/lusingander/gotip/internal/ui"
 )
 
 var ignore = []string{
@@ -44,7 +45,5 @@ func run() error {
 		return err
 	}
 
-	parse.PrintTestFunctions(tests)
-
-	return nil
+	return ui.Start()
 }
