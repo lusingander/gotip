@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"cmp"
+	"slices"
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/lusingander/gotip/internal/parse"
 )
@@ -27,6 +30,9 @@ func toTestCaseItems(tests map[string][]*parse.TestFunction) []list.Item {
 			}
 		}
 	}
+	slices.SortStableFunc(items, func(a, b list.Item) int {
+		return cmp.Compare(a.(*testCaseItem).path, b.(*testCaseItem).path)
+	})
 	return items
 }
 
