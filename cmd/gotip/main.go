@@ -45,5 +45,5 @@ func run() error {
 		return err
 	}
 
-	return ui.Start()
+	return ui.Start(tests)
 }

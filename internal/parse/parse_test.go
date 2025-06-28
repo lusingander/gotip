@@ -27,49 +27,49 @@ func TestProcessFile(t *testing.T) {
 func wantTestA() []*TestFunction {
 	return []*TestFunction{
 		{
-			name: "TestA1",
-			subs: []*SubTest{},
+			Name: "TestA1",
+			Subs: []*SubTest{},
 		},
 		{
-			name: "TestA2_1",
-			subs: []*SubTest{
-				{name: "test1", subs: []*SubTest{}},
-				{name: "test2", subs: []*SubTest{}},
-				{name: "test3", subs: []*SubTest{}},
+			Name: "TestA2_1",
+			Subs: []*SubTest{
+				{Name: "test1", Subs: []*SubTest{}},
+				{Name: "test2", Subs: []*SubTest{}},
+				{Name: "test3", Subs: []*SubTest{}},
 			},
 		},
 		{
-			name: "TestA2_2",
-			subs: []*SubTest{
-				{name: "test1", subs: []*SubTest{}},
-				{name: "test2", subs: []*SubTest{}},
-				{name: "test3", subs: []*SubTest{}},
+			Name: "TestA2_2",
+			Subs: []*SubTest{
+				{Name: "test1", Subs: []*SubTest{}},
+				{Name: "test2", Subs: []*SubTest{}},
+				{Name: "test3", Subs: []*SubTest{}},
 			},
 		},
 		{
-			name: "TestA2_3",
-			subs: []*SubTest{
-				{name: "test1", subs: []*SubTest{}},
-				{name: "test2", subs: []*SubTest{}},
-				{name: "test3", subs: []*SubTest{}},
+			Name: "TestA2_3",
+			Subs: []*SubTest{
+				{Name: "test1", Subs: []*SubTest{}},
+				{Name: "test2", Subs: []*SubTest{}},
+				{Name: "test3", Subs: []*SubTest{}},
 			},
 		},
 		{
-			name: "TestA3",
-			subs: []*SubTest{
-				{name: "<unknown>", subs: []*SubTest{}},
+			Name: "TestA3",
+			Subs: []*SubTest{
+				{Name: "<unknown>", Subs: []*SubTest{}},
 			},
 		},
 		{
-			name: "TestA4",
-			subs: []*SubTest{
-				{name: "<unknown>", subs: []*SubTest{}},
+			Name: "TestA4",
+			Subs: []*SubTest{
+				{Name: "<unknown>", Subs: []*SubTest{}},
 			},
 		},
 		{
-			name: "TestA5",
-			subs: []*SubTest{
-				{name: "<unknown>", subs: []*SubTest{}},
+			Name: "TestA5",
+			Subs: []*SubTest{
+				{Name: "<unknown>", Subs: []*SubTest{}},
 			},
 		},
 	}
@@ -78,10 +78,10 @@ func wantTestA() []*TestFunction {
 func wantTestB() []*TestFunction {
 	return []*TestFunction{
 		{
-			name: "TestB1",
-			subs: []*SubTest{
-				{name: "test1", subs: []*SubTest{}},
-				{name: "test2", subs: []*SubTest{}},
+			Name: "TestB1",
+			Subs: []*SubTest{
+				{Name: "test1", Subs: []*SubTest{}},
+				{Name: "test2", Subs: []*SubTest{}},
 			},
 		},
 	}
@@ -90,24 +90,24 @@ func wantTestB() []*TestFunction {
 func wantTestC() []*TestFunction {
 	return []*TestFunction{
 		{
-			name: "TestC1",
-			subs: []*SubTest{
+			Name: "TestC1",
+			Subs: []*SubTest{
 				{
-					name: "test1",
-					subs: []*SubTest{
+					Name: "test1",
+					Subs: []*SubTest{
 						{
-							name: "subtest1",
-							subs: []*SubTest{},
+							Name: "subtest1",
+							Subs: []*SubTest{},
 						},
 						{
-							name: "subtest2",
-							subs: []*SubTest{},
+							Name: "subtest2",
+							Subs: []*SubTest{},
 						},
 						{
-							name: "subtest3",
-							subs: []*SubTest{
-								{name: "subsubtest1", subs: []*SubTest{}},
-								{name: "subsubtest2", subs: []*SubTest{}},
+							Name: "subtest3",
+							Subs: []*SubTest{
+								{Name: "subsubtest1", Subs: []*SubTest{}},
+								{Name: "subsubtest2", Subs: []*SubTest{}},
 							},
 						},
 					},
@@ -128,11 +128,11 @@ func assertEqualTests(t *testing.T, got, want []*TestFunction) {
 }
 
 func assertEqualTest(t *testing.T, got, want *TestFunction) {
-	if got.name != want.name {
-		t.Errorf("got name = %s, want %s", got.name, want.name)
+	if got.Name != want.Name {
+		t.Errorf("got name = %s, want %s", got.Name, want.Name)
 		return
 	}
-	assertEqualSubTests(t, got.subs, want.subs)
+	assertEqualSubTests(t, got.Subs, want.Subs)
 }
 
 func assertEqualSubTests(t *testing.T, got, want []*SubTest) {
@@ -146,15 +146,15 @@ func assertEqualSubTests(t *testing.T, got, want []*SubTest) {
 }
 
 func assertEqualSubTest(t *testing.T, got, want *SubTest) {
-	if got.name != want.name {
-		t.Errorf("got name = %s, want %s", got.name, want.name)
+	if got.Name != want.Name {
+		t.Errorf("got name = %s, want %s", got.Name, want.Name)
 		return
 	}
-	if len(got.subs) != len(want.subs) {
-		t.Errorf("got subs length = %d, want %d", len(got.subs), len(want.subs))
+	if len(got.Subs) != len(want.Subs) {
+		t.Errorf("got subs length = %d, want %d", len(got.Subs), len(want.Subs))
 		return
 	}
-	for i := range got.subs {
-		assertEqualSubTest(t, got.subs[i], want.subs[i])
+	for i := range got.Subs {
+		assertEqualSubTest(t, got.Subs[i], want.Subs[i])
 	}
 }

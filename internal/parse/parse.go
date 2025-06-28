@@ -9,13 +9,13 @@ import (
 )
 
 type TestFunction struct {
-	name string
-	subs []*SubTest
+	Name string
+	Subs []*SubTest
 }
 
 type SubTest struct {
-	name string
-	subs []*SubTest
+	Name string
+	Subs []*SubTest
 }
 
 func ProcessFile(path string) ([]*TestFunction, error) {
@@ -44,8 +44,8 @@ func processTestFunction(fn *ast.FuncDecl) *TestFunction {
 	}
 
 	return &TestFunction{
-		name: fn.Name.Name,
-		subs: subs,
+		Name: fn.Name.Name,
+		Subs: subs,
 	}
 }
 
@@ -191,8 +191,8 @@ func (t *unresolvedSubTest) resolve() []*SubTest {
 	tests := make([]*SubTest, 0)
 	for _, n := range t.name.resolveTestName() {
 		test := &SubTest{
-			name: n,
-			subs: subTests,
+			Name: n,
+			Subs: subTests,
 		}
 		tests = append(tests, test)
 	}
@@ -336,18 +336,18 @@ func PrintTestFunctions(tests map[string][]*TestFunction) {
 }
 
 func printTestFunction(tf *TestFunction) {
-	fmt.Printf("- %s\n", tf.name)
-	if len(tf.subs) > 0 {
-		printSubTests(tf.subs, 1)
+	fmt.Printf("- %s\n", tf.Name)
+	if len(tf.Subs) > 0 {
+		printSubTests(tf.Subs, 1)
 	}
 }
 
 func printSubTests(subs []*SubTest, indentLevel int) {
 	indent := strings.Repeat("  ", indentLevel)
 	for _, sub := range subs {
-		fmt.Printf("%s- %s\n", indent, sub.name)
-		if len(sub.subs) > 0 {
-			printSubTests(sub.subs, indentLevel+1)
+		fmt.Printf("%s- %s\n", indent, sub.Name)
+		if len(sub.Subs) > 0 {
+			printSubTests(sub.Subs, indentLevel+1)
 		}
 	}
 }
