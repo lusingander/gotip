@@ -44,12 +44,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			selected := m.list.SelectedItem()
 			if selected != nil {
-				item := selected.(*testCaseItem)
-				m.target = &tip.Target{
-					Path:         item.path,
-					Name:         item.name,
-					IsUnresolved: item.isUnresolved,
-				}
+				m.target = selected.(*testCaseItem).ToTarget()
 				return m, tea.Quit
 			}
 		}

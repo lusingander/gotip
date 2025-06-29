@@ -56,6 +56,14 @@ func toTestCaseItemsFromSubTests(ss []*tip.SubTest, path, base string) []list.It
 	return items
 }
 
+func (i *testCaseItem) ToTarget() *tip.Target {
+	return &tip.Target{
+		Name:         i.name,
+		Path:         i.path,
+		IsUnresolved: i.isUnresolved,
+	}
+}
+
 func (i *testCaseItem) Title() string {
 	return i.name
 }
