@@ -2,6 +2,7 @@ package foo
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -104,7 +105,7 @@ func TestA3(t *testing.T) {
 
 func TestA4(t *testing.T) {
 	for i := 0; i < 3; i++ {
-		t.Run("test"+string(i), func(t *testing.T) {
+		t.Run("test"+strconv.Itoa(i), func(t *testing.T) {
 			a := i + 1
 			b := i + 2
 			got := a + b
