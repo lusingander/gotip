@@ -13,7 +13,7 @@ import (
 
 var outputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("34"))
 
-func Test(target *tip.Target) error {
+func Test(target *tip.Target, extraArgs []string) error {
 	if target == nil {
 		return nil
 	}
@@ -21,7 +21,8 @@ func Test(target *tip.Target) error {
 	packageName := relativePathToPackageName(target.Path)
 	testNameRegex := testNameToTestRunRegex(target.Name, target.IsUnresolved)
 
-	cmd := exec.Command("go", "test", "-run", testNameRegex, packageName)
+	args := []string{"test", "-run", testNameRegex, packageName}
+	cmd := exec.Command("go", append(args, extraArgs...)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
