@@ -1,12 +1,16 @@
 package parse
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/lusingander/gotip/internal/tip"
+)
 
 func TestProcessFile(t *testing.T) {
 	tests := []struct {
 		name     string
 		filePath string
-		want     []*TestFunction
+		want     []*tip.TestFunction
 	}{
 		{"a", "testdata/foo/a_test.go", wantTestA()},
 		{"b", "testdata/foo/b_test.go", wantTestB()},
@@ -24,90 +28,90 @@ func TestProcessFile(t *testing.T) {
 	}
 }
 
-func wantTestA() []*TestFunction {
-	return []*TestFunction{
+func wantTestA() []*tip.TestFunction {
+	return []*tip.TestFunction{
 		{
 			Name: "TestA1",
-			Subs: []*SubTest{},
+			Subs: []*tip.SubTest{},
 		},
 		{
 			Name: "TestA2_1",
-			Subs: []*SubTest{
-				{Name: "test1", Subs: []*SubTest{}},
-				{Name: "test2", Subs: []*SubTest{}},
-				{Name: "test3", Subs: []*SubTest{}},
+			Subs: []*tip.SubTest{
+				{Name: "test1", Subs: []*tip.SubTest{}},
+				{Name: "test2", Subs: []*tip.SubTest{}},
+				{Name: "test3", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestA2_2",
-			Subs: []*SubTest{
-				{Name: "test1", Subs: []*SubTest{}},
-				{Name: "test2", Subs: []*SubTest{}},
-				{Name: "test3", Subs: []*SubTest{}},
+			Subs: []*tip.SubTest{
+				{Name: "test1", Subs: []*tip.SubTest{}},
+				{Name: "test2", Subs: []*tip.SubTest{}},
+				{Name: "test3", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestA2_3",
-			Subs: []*SubTest{
-				{Name: "test1", Subs: []*SubTest{}},
-				{Name: "test2", Subs: []*SubTest{}},
-				{Name: "test3", Subs: []*SubTest{}},
+			Subs: []*tip.SubTest{
+				{Name: "test1", Subs: []*tip.SubTest{}},
+				{Name: "test2", Subs: []*tip.SubTest{}},
+				{Name: "test3", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestA3",
-			Subs: []*SubTest{
-				{Name: "<unknown>", Subs: []*SubTest{}},
+			Subs: []*tip.SubTest{
+				{Name: "<unknown>", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestA4",
-			Subs: []*SubTest{
-				{Name: "<unknown>", Subs: []*SubTest{}},
+			Subs: []*tip.SubTest{
+				{Name: "<unknown>", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestA5",
-			Subs: []*SubTest{
-				{Name: "<unknown>", Subs: []*SubTest{}},
+			Subs: []*tip.SubTest{
+				{Name: "<unknown>", Subs: []*tip.SubTest{}},
 			},
 		},
 	}
 }
 
-func wantTestB() []*TestFunction {
-	return []*TestFunction{
+func wantTestB() []*tip.TestFunction {
+	return []*tip.TestFunction{
 		{
 			Name: "TestB1",
-			Subs: []*SubTest{
-				{Name: "test1", Subs: []*SubTest{}},
-				{Name: "test2", Subs: []*SubTest{}},
+			Subs: []*tip.SubTest{
+				{Name: "test1", Subs: []*tip.SubTest{}},
+				{Name: "test2", Subs: []*tip.SubTest{}},
 			},
 		},
 	}
 }
 
-func wantTestC() []*TestFunction {
-	return []*TestFunction{
+func wantTestC() []*tip.TestFunction {
+	return []*tip.TestFunction{
 		{
 			Name: "TestC1",
-			Subs: []*SubTest{
+			Subs: []*tip.SubTest{
 				{
 					Name: "test1",
-					Subs: []*SubTest{
+					Subs: []*tip.SubTest{
 						{
 							Name: "subtest1",
-							Subs: []*SubTest{},
+							Subs: []*tip.SubTest{},
 						},
 						{
 							Name: "subtest2",
-							Subs: []*SubTest{},
+							Subs: []*tip.SubTest{},
 						},
 						{
 							Name: "subtest3",
-							Subs: []*SubTest{
-								{Name: "subsubtest1", Subs: []*SubTest{}},
-								{Name: "subsubtest2", Subs: []*SubTest{}},
+							Subs: []*tip.SubTest{
+								{Name: "subsubtest1", Subs: []*tip.SubTest{}},
+								{Name: "subsubtest2", Subs: []*tip.SubTest{}},
 							},
 						},
 					},
@@ -117,7 +121,7 @@ func wantTestC() []*TestFunction {
 	}
 }
 
-func assertEqualTests(t *testing.T, got, want []*TestFunction) {
+func assertEqualTests(t *testing.T, got, want []*tip.TestFunction) {
 	if len(got) != len(want) {
 		t.Errorf("got tests length = %d, want %d", len(got), len(want))
 		return
@@ -127,7 +131,7 @@ func assertEqualTests(t *testing.T, got, want []*TestFunction) {
 	}
 }
 
-func assertEqualTest(t *testing.T, got, want *TestFunction) {
+func assertEqualTest(t *testing.T, got, want *tip.TestFunction) {
 	if got.Name != want.Name {
 		t.Errorf("got name = %s, want %s", got.Name, want.Name)
 		return
@@ -135,7 +139,7 @@ func assertEqualTest(t *testing.T, got, want *TestFunction) {
 	assertEqualSubTests(t, got.Subs, want.Subs)
 }
 
-func assertEqualSubTests(t *testing.T, got, want []*SubTest) {
+func assertEqualSubTests(t *testing.T, got, want []*tip.SubTest) {
 	if len(got) != len(want) {
 		t.Errorf("got subs length = %d, want %d", len(got), len(want))
 		return
@@ -145,7 +149,7 @@ func assertEqualSubTests(t *testing.T, got, want []*SubTest) {
 	}
 }
 
-func assertEqualSubTest(t *testing.T, got, want *SubTest) {
+func assertEqualSubTest(t *testing.T, got, want *tip.SubTest) {
 	if got.Name != want.Name {
 		t.Errorf("got name = %s, want %s", got.Name, want.Name)
 		return

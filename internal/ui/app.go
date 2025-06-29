@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/lusingander/gotip/internal/parse"
 	"github.com/lusingander/gotip/internal/tip"
 )
 
@@ -67,7 +66,7 @@ func (m model) View() string {
 	return m.list.View()
 }
 
-func Start(tests map[string][]*parse.TestFunction) (*tip.Target, error) {
+func Start(tests map[string][]*tip.TestFunction) (*tip.Target, error) {
 	items := toTestCaseItems(tests)
 	m := newModel(items)
 	p := tea.NewProgram(m, tea.WithAltScreen())

@@ -9,26 +9,17 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/lusingander/gotip/internal/tip"
 )
-
-type TestFunction struct {
-	Name string
-	Subs []*SubTest
-}
-
-type SubTest struct {
-	Name                 string
-	Subs                 []*SubTest
-	IsUnresolvedSubTests bool
-}
 
 var ignore = []string{
 	"vendor",
 	"testdata",
 }
 
-func ProcessFilesRecursively(rootDir string) (map[string][]*TestFunction, error) {
-	tests := make(map[string][]*TestFunction)
+func ProcessFilesRecursively(rootDir string) (map[string][]*tip.TestFunction, error) {
+	tests := make(map[string][]*tip.TestFunction)
 	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() && slices.Contains(ignore, d.Name()) {
 			return filepath.SkipDir
@@ -49,13 +40,13 @@ func ProcessFilesRecursively(rootDir string) (map[string][]*TestFunction, error)
 	return tests, nil
 }
 
-func processFile(path string) ([]*TestFunction, error) {
+func processFile(path string) ([]*tip.TestFunction, error) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, path, nil, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse file %s: %w", path, err)
 	}
-	testFunctions := make([]*TestFunction, 0)
+	testFunctions := make([]*tip.TestFunction, 0)
 	for _, decl := range node.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
 		if !ok || !strings.HasPrefix(fn.Name.Name, "Test") {
@@ -66,15 +57,15 @@ func processFile(path string) ([]*TestFunction, error) {
 	return testFunctions, nil
 }
 
-func processTestFunction(fn *ast.FuncDecl) *TestFunction {
+func processTestFunction(fn *ast.FuncDecl) *tip.TestFunction {
 	unresolvedSubTests := findSubTests(fn.Body.List)
 
-	subs := make([]*SubTest, 0)
+	subs := make([]*tip.SubTest, 0)
 	for _, sub := range unresolvedSubTests {
 		subs = append(subs, sub.resolve()...)
 	}
 
-	return &TestFunction{
+	return &tip.TestFunction{
 		Name: fn.Name.Name,
 		Subs: subs,
 	}
@@ -214,15 +205,15 @@ type unresolvedSubTest struct {
 	subs []*unresolvedSubTest
 }
 
-func (t *unresolvedSubTest) resolve() []*SubTest {
-	subTests := make([]*SubTest, 0)
+func (t *unresolvedSubTest) resolve() []*tip.SubTest {
+	subTests := make([]*tip.SubTest, 0)
 	for _, sub := range t.subs {
 		subTests = append(subTests, sub.resolve()...)
 	}
-	tests := make([]*SubTest, 0)
+	tests := make([]*tip.SubTest, 0)
 	ns, resolved := t.name.resolveTestName()
 	for _, n := range ns {
-		test := &SubTest{
+		test := &tip.SubTest{
 			Name:                 n,
 			Subs:                 subTests,
 			IsUnresolvedSubTests: !resolved,
@@ -358,7 +349,7 @@ func forRangeContextFromRangeStmt(stmt *ast.RangeStmt) *forRangeContext {
 	}
 }
 
-func PrintTestFunctions(tests map[string][]*TestFunction) {
+func PrintTestFunctions(tests map[string][]*tip.TestFunction) {
 	for path, testFunctions := range tests {
 		fmt.Printf("# %s\n", path)
 		for _, tf := range testFunctions {
@@ -368,14 +359,14 @@ func PrintTestFunctions(tests map[string][]*TestFunction) {
 	}
 }
 
-func printTestFunction(tf *TestFunction) {
+func printTestFunction(tf *tip.TestFunction) {
 	fmt.Printf("- %s\n", tf.Name)
 	if len(tf.Subs) > 0 {
 		printSubTests(tf.Subs, 1)
 	}
 }
 
-func printSubTests(subs []*SubTest, indentLevel int) {
+func printSubTests(subs []*tip.SubTest, indentLevel int) {
 	indent := strings.Repeat("  ", indentLevel)
 	for _, sub := range subs {
 		fmt.Printf("%s- %s\n", indent, sub.Name)

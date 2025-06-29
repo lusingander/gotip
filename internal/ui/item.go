@@ -5,7 +5,7 @@ import (
 	"slices"
 
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/lusingander/gotip/internal/parse"
+	"github.com/lusingander/gotip/internal/tip"
 )
 
 type testCaseItem struct {
@@ -16,7 +16,7 @@ type testCaseItem struct {
 
 var _ list.Item = (*testCaseItem)(nil)
 
-func toTestCaseItems(tests map[string][]*parse.TestFunction) []list.Item {
+func toTestCaseItems(tests map[string][]*tip.TestFunction) []list.Item {
 	items := make([]list.Item, 0)
 	for path, tfs := range tests {
 		for _, tf := range tfs {
@@ -38,7 +38,7 @@ func toTestCaseItems(tests map[string][]*parse.TestFunction) []list.Item {
 	return items
 }
 
-func toTestCaseItemsFromSubTests(ss []*parse.SubTest, path, base string) []list.Item {
+func toTestCaseItemsFromSubTests(ss []*tip.SubTest, path, base string) []list.Item {
 	items := make([]list.Item, 0)
 	for _, s := range ss {
 		name := base + "/" + s.Name
