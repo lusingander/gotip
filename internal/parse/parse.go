@@ -243,7 +243,7 @@ type selectorSubTestName struct {
 
 func (s *selectorSubTestName) resolveTestName() ([]string, bool) {
 	if len(s.cases) == 0 {
-		return []string{"<unknown>"}, false
+		return []string{tip.UnresolvedTestCaseName}, false
 	}
 	return s.cases, true
 }
@@ -254,13 +254,13 @@ type identSubTestName struct {
 
 func (i *identSubTestName) resolveTestName() ([]string, bool) {
 	// todo: resolve the identifier to a specific name if possible
-	return []string{"<unknown>"}, false
+	return []string{tip.UnresolvedTestCaseName}, false
 }
 
 type unknownSubTestName struct{}
 
 func (u *unknownSubTestName) resolveTestName() ([]string, bool) {
-	return []string{"<unknown>"}, false
+	return []string{tip.UnresolvedTestCaseName}, false
 }
 
 type subTestContext interface{}

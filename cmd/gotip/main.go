@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
+	"github.com/lusingander/gotip/internal/command"
 	"github.com/lusingander/gotip/internal/parse"
 	"github.com/lusingander/gotip/internal/ui"
 )
@@ -23,9 +23,8 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if target != nil {
-		// todo
-		fmt.Printf("Selected test: %s %s (unresolved: %t)\n", target.Path, target.Name, target.IsUnresolved)
+	if target == nil {
+		return nil
 	}
-	return nil
+	return command.Test(target)
 }
