@@ -14,7 +14,7 @@ func TestProcessFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ProcessFile(tt.filePath)
+			got, err := processFile(tt.filePath)
 			if err != nil {
 				t.Errorf("ProcessFile(%s) error = %v", tt.filePath, err)
 				return

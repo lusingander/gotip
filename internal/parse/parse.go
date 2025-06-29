@@ -5,6 +5,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
+	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -19,7 +22,34 @@ type SubTest struct {
 	IsUnresolvedSubTests bool
 }
 
-func ProcessFile(path string) ([]*TestFunction, error) {
+var ignore = []string{
+	"vendor",
+	"testdata",
+}
+
+func ProcessFilesRecursively(rootDir string) (map[string][]*TestFunction, error) {
+	tests := make(map[string][]*TestFunction)
+	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() && slices.Contains(ignore, d.Name()) {
+			return filepath.SkipDir
+		}
+		if err != nil || !strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		testFunctions, err := processFile(path)
+		if err != nil {
+			return fmt.Errorf("error processing file %s: %w", path, err)
+		}
+		tests[path] = testFunctions
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return tests, nil
+}
+
+func processFile(path string) ([]*TestFunction, error) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, path, nil, 0)
 	if err != nil {
