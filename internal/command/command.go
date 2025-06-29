@@ -7,8 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/gotip/internal/tip"
 )
+
+var outputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("34"))
 
 func Test(target *tip.Target) error {
 	if target == nil {
@@ -22,8 +25,8 @@ func Test(target *tip.Target) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	fmt.Println(cmd.String())
 
+	fmt.Println(outputStyle.Render(cmd.String()))
 	return cmd.Run()
 }
 
