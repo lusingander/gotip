@@ -45,5 +45,13 @@ func run() error {
 		return err
 	}
 
-	return ui.Start(tests)
+	target, err := ui.Start(tests)
+	if err != nil {
+		return err
+	}
+	if target != nil {
+		// todo
+		fmt.Printf("Selected test: %s %s (unresolved: %t)\n", target.Path, target.Name, target.IsUnresolved)
+	}
+	return nil
 }

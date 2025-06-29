@@ -4,10 +4,13 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lusingander/gotip/internal/parse"
+	"github.com/lusingander/gotip/internal/tip"
 )
 
 type model struct {
 	list list.Model
+
+	target *tip.Target
 }
 
 func newModel(items []list.Item) model {
@@ -15,7 +18,8 @@ func newModel(items []list.Item) model {
 	list.Title = "GOTIP"
 
 	return model{
-		list: list,
+		list:   list,
+		target: nil,
 	}
 }
 
@@ -38,6 +42,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
+		case "enter":
+			selected := m.list.SelectedItem()
+			if selected != nil {
+				item := selected.(*testCaseItem)
+				m.target = &tip.Target{
+					Path:         item.path,
+					Name:         item.name,
+					IsUnresolved: item.isUnresolved,
+				}
+				return m, tea.Quit
+			}
 		}
 	}
 
@@ -52,10 +67,13 @@ func (m model) View() string {
 	return m.list.View()
 }
 
-func Start(tests map[string][]*parse.TestFunction) error {
+func Start(tests map[string][]*parse.TestFunction) (*tip.Target, error) {
 	items := toTestCaseItems(tests)
 	m := newModel(items)
 	p := tea.NewProgram(m, tea.WithAltScreen())
-	_, err := p.Run()
-	return err
+	ret, err := p.Run()
+	if err != nil {
+		return nil, err
+	}
+	return ret.(model).target, nil
 }

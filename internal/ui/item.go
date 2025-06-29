@@ -9,8 +9,9 @@ import (
 )
 
 type testCaseItem struct {
-	path string
-	name string
+	path         string
+	name         string
+	isUnresolved bool
 }
 
 var _ list.Item = (*testCaseItem)(nil)
@@ -21,8 +22,9 @@ func toTestCaseItems(tests map[string][]*parse.TestFunction) []list.Item {
 		for _, tf := range tfs {
 			if len(tf.Subs) == 0 {
 				item := &testCaseItem{
-					path: path,
-					name: tf.Name,
+					path:         path,
+					name:         tf.Name,
+					isUnresolved: false,
 				}
 				items = append(items, item)
 			} else {
@@ -42,8 +44,9 @@ func toTestCaseItemsFromSubTests(ss []*parse.SubTest, path, base string) []list.
 		name := base + "/" + s.Name
 		if len(s.Subs) == 0 {
 			item := &testCaseItem{
-				path: path,
-				name: name,
+				path:         path,
+				name:         name,
+				isUnresolved: s.IsUnresolvedSubTests,
 			}
 			items = append(items, item)
 		} else {

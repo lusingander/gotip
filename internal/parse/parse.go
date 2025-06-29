@@ -14,8 +14,9 @@ type TestFunction struct {
 }
 
 type SubTest struct {
-	Name string
-	Subs []*SubTest
+	Name                 string
+	Subs                 []*SubTest
+	IsUnresolvedSubTests bool
 }
 
 func ProcessFile(path string) ([]*TestFunction, error) {
@@ -189,10 +190,12 @@ func (t *unresolvedSubTest) resolve() []*SubTest {
 		subTests = append(subTests, sub.resolve()...)
 	}
 	tests := make([]*SubTest, 0)
-	for _, n := range t.name.resolveTestName() {
+	ns, resolved := t.name.resolveTestName()
+	for _, n := range ns {
 		test := &SubTest{
-			Name: n,
-			Subs: subTests,
+			Name:                 n,
+			Subs:                 subTests,
+			IsUnresolvedSubTests: !resolved,
 		}
 		tests = append(tests, test)
 	}
@@ -200,15 +203,15 @@ func (t *unresolvedSubTest) resolve() []*SubTest {
 }
 
 type unresolvedSubTestName interface {
-	resolveTestName() []string
+	resolveTestName() ([]string, bool)
 }
 
 type literalSubTestName struct {
 	name string
 }
 
-func (l *literalSubTestName) resolveTestName() []string {
-	return []string{l.name}
+func (l *literalSubTestName) resolveTestName() ([]string, bool) {
+	return []string{l.name}, true
 }
 
 type selectorSubTestName struct {
@@ -217,26 +220,26 @@ type selectorSubTestName struct {
 	cases    []string
 }
 
-func (s *selectorSubTestName) resolveTestName() []string {
+func (s *selectorSubTestName) resolveTestName() ([]string, bool) {
 	if len(s.cases) == 0 {
-		return []string{"<unknown>"}
+		return []string{"<unknown>"}, false
 	}
-	return s.cases
+	return s.cases, true
 }
 
 type identSubTestName struct {
 	name string
 }
 
-func (i *identSubTestName) resolveTestName() []string {
+func (i *identSubTestName) resolveTestName() ([]string, bool) {
 	// todo: resolve the identifier to a specific name if possible
-	return []string{"<unknown>"}
+	return []string{"<unknown>"}, false
 }
 
 type unknownSubTestName struct{}
 
-func (u *unknownSubTestName) resolveTestName() []string {
-	return []string{"<unknown>"}
+func (u *unknownSubTestName) resolveTestName() ([]string, bool) {
+	return []string{"<unknown>"}, false
 }
 
 type subTestContext interface{}
