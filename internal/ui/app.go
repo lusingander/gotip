@@ -17,6 +17,24 @@ var (
 	borderColor       = lipgloss.Color("240")
 )
 
+var (
+	selectedNameStyle = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
+	selectedPathStyle = lipgloss.NewStyle().Foreground(selectedColor)
+
+	headerStyle = lipgloss.NewStyle().
+			Padding(0, 2).
+			Border(lipgloss.NormalBorder(), false, false, true, false).
+			BorderForeground(borderColor)
+
+	footerFilteredStyle      = lipgloss.NewStyle()
+	footerSelectedIndexStyle = lipgloss.NewStyle()
+
+	footerStyle = lipgloss.NewStyle().
+			Padding(0, 1).
+			Border(lipgloss.NormalBorder(), true, false, false, false).
+			BorderForeground(borderColor)
+)
+
 type model struct {
 	list list.Model
 	w, h int
@@ -92,44 +110,32 @@ func (m model) View() string {
 	var headerContent string
 	if m.list.SelectedItem() != nil {
 		selected := m.list.SelectedItem().(*testCaseItem)
-		name := lipgloss.NewStyle().Foreground(selectedColor).Bold(true).Render(selected.name)
-		path := lipgloss.NewStyle().Foreground(selectedColor).Render(selected.path)
-		headerContent = name + "\n" + path
+		headerContent = selectedNameStyle.Render(selected.name) + "\n" + selectedPathStyle.Render(selected.path)
 	} else {
 		headerContent = "\n"
 	}
 
-	header := lipgloss.NewStyle().
-		Padding(0, 2).
-		Width(m.w).
-		Border(lipgloss.NormalBorder(), false, false, true, false).
-		BorderForeground(borderColor).
-		Render(headerContent)
+	header := headerStyle.Width(m.w).Render(headerContent)
 
 	var footerStatus string
 	switch m.list.FilterState() {
 	case list.Filtering:
 		footerStatus = strings.TrimRight(m.list.FilterInput.View(), " ")
 	case list.FilterApplied:
-		footerStatus = lipgloss.NewStyle().
+		footerStatus = footerFilteredStyle.
 			Render(fmt.Sprintf("Filtered: %d items [Query: %s]", len(m.list.VisibleItems()), m.list.FilterValue()))
 	}
 
-	var footerSelected string
+	var footerSelectedIndex string
 	if len(m.list.VisibleItems()) > 0 {
-		footerSelected = lipgloss.NewStyle().
+		footerSelectedIndex = footerSelectedIndexStyle.
 			Render(fmt.Sprintf("%d / %d", m.list.Index()+1, len(m.list.VisibleItems())))
 	}
 
-	footerSpaceWidth := m.w - lipgloss.Width(footerStatus) - lipgloss.Width(footerSelected) - 2 /* padding */
+	footerSpaceWidth := m.w - lipgloss.Width(footerStatus) - lipgloss.Width(footerSelectedIndex) - 2 /* padding */
 	footerSpace := strings.Repeat(" ", footerSpaceWidth)
 
-	footer := lipgloss.NewStyle().
-		Padding(0, 1).
-		Width(m.w).
-		Border(lipgloss.NormalBorder(), true, false, false, false).
-		BorderForeground(borderColor).
-		Render(footerStatus + footerSpace + footerSelected)
+	footer := footerStyle.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, m.list.View(), footer)
 }
