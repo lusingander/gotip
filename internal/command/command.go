@@ -18,7 +18,12 @@ func Test(target *tip.Target, extraArgs []string) error {
 
 	nameRegex := testNameToTestRunRegex(target.TestNamePattern, target.IsPrefix)
 
-	args := []string{"test", "-run", nameRegex, target.PackageName}
+	args := []string{"test"}
+	if target.TestNamePattern != "" {
+		args = append(args, "-run", nameRegex)
+	}
+	args = append(args, target.PackageName)
+
 	cmd := exec.Command("go", append(args, extraArgs...)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
