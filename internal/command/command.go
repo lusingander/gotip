@@ -11,7 +11,7 @@ import (
 	"github.com/lusingander/gotip/internal/tip"
 )
 
-var outputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("34"))
+var outputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00A29C"))
 
 func Test(target *tip.Target, extraArgs []string) error {
 	if target == nil {
