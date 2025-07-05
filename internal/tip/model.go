@@ -1,7 +1,6 @@
 package tip
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 )
@@ -18,23 +17,27 @@ type SubTest struct {
 }
 
 type Target struct {
-	Path         string
-	Name         string
-	IsUnresolved bool
+	PackageName     string
+	TestNamePattern string
+	IsPrefix        bool
 }
 
-func (t *Target) RelativePathToPackageName() string {
-	name := filepath.Dir(t.Path)
+func NewTarget(path, name string, isUnresolved bool) *Target {
+	if isUnresolved {
+		name = strings.TrimSuffix(name, UnresolvedTestCaseName)
+	}
+	return &Target{
+		PackageName:     relativePathToPackageName(path),
+		TestNamePattern: name,
+		IsPrefix:        isUnresolved,
+	}
+}
+
+func relativePathToPackageName(path string) string {
+	name := filepath.Dir(path)
 	name = filepath.ToSlash(name)
 	if !strings.HasPrefix(name, "./") {
 		name = "./" + name
 	}
 	return name
-}
-
-func (t *Target) TestNameToTestRunRegex() string {
-	if t.IsUnresolved {
-		return fmt.Sprintf("^%s", strings.TrimSuffix(t.Name, UnresolvedTestCaseName))
-	}
-	return fmt.Sprintf("^%s$", t.Name)
 }

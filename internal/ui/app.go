@@ -39,7 +39,9 @@ type model struct {
 	list list.Model
 	w, h int
 
-	target *tip.Target
+	beforeSelected int
+	tmpTarget      *tip.Target
+	retTarget      *tip.Target
 }
 
 func newModel(items []list.Item) model {
@@ -57,8 +59,10 @@ func newModel(items []list.Item) model {
 	list.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
 
 	return model{
-		list:   list,
-		target: nil,
+		list:           list,
+		beforeSelected: -1,
+		tmpTarget:      nil,
+		retTarget:      nil,
 	}
 }
 
@@ -87,17 +91,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "enter":
-			selected := m.list.SelectedItem()
-			if selected != nil {
-				m.target = selected.(*testCaseItem).ToTarget()
-				return m, tea.Quit
-			}
+			m.retTarget = m.tmpTarget
+			return m, tea.Quit
 		}
 	}
 
 	newList, cmd := m.list.Update(msg)
 	m.list = newList
 	cmds = append(cmds, cmd)
+
+	if m.beforeSelected != m.list.GlobalIndex() && m.list.SelectedItem() != nil {
+		selected := m.list.SelectedItem().(*testCaseItem)
+		m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
+		m.beforeSelected = m.list.GlobalIndex()
+	}
 
 	return m, tea.Batch(cmds...)
 }
@@ -148,5 +155,5 @@ func Start(tests map[string][]*tip.TestFunction) (*tip.Target, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ret.(model).target, nil
+	return ret.(model).retTarget, nil
 }

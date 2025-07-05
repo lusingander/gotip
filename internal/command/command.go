@@ -16,10 +16,9 @@ func Test(target *tip.Target, extraArgs []string) error {
 		return nil
 	}
 
-	packageName := target.RelativePathToPackageName()
-	testNameRegex := target.TestNameToTestRunRegex()
+	nameRegex := testNameToTestRunRegex(target.TestNamePattern, target.IsPrefix)
 
-	args := []string{"test", "-run", testNameRegex, packageName}
+	args := []string{"test", "-run", nameRegex, target.PackageName}
 	cmd := exec.Command("go", append(args, extraArgs...)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -27,4 +26,11 @@ func Test(target *tip.Target, extraArgs []string) error {
 
 	fmt.Println(outputStyle.Render(cmd.String()))
 	return cmd.Run()
+}
+
+func testNameToTestRunRegex(pattern string, isPrefix bool) string {
+	if isPrefix {
+		return fmt.Sprintf("^%s", pattern)
+	}
+	return fmt.Sprintf("^%s$", pattern)
 }
