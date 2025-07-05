@@ -2,6 +2,8 @@
 
 Go Test Interactive Picker
 
+<img src="./img/demo.gif" width=600>
+
 ## About
 
 gotip is a TUI application for interactively selecting and running Go tests.
@@ -46,6 +48,8 @@ This allows you to execute all subtests under that group.
 For example, if you have `TestFoo/Bar/Baz` selected, pressing <kbd>Backspace</kbd> will select `TestFoo/Bar`, and running it will execute all tests under that prefix.
 
 If subtest names could not be automatically discovered, gotip defaults to selecting the nearest available parent test.
+
+<img src="./img/group.gif" width=600>
 
 ### Keybindings
 
