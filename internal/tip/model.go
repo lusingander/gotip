@@ -41,3 +41,13 @@ func relativePathToPackageName(path string) string {
 	}
 	return name
 }
+
+func (t *Target) DropLastSegment() {
+	pattern := strings.TrimSuffix(t.TestNamePattern, "/")
+	if lastSlash := strings.LastIndex(pattern, "/"); lastSlash != -1 {
+		t.TestNamePattern = pattern[:lastSlash+1]
+	} else {
+		t.TestNamePattern = ""
+	}
+	t.IsPrefix = true
+}

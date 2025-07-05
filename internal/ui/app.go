@@ -94,6 +94,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			m.retTarget = m.tmpTarget
 			return m, tea.Quit
+		case "backspace", "ctrl+h":
+			if m.tmpTarget != nil {
+				m.tmpTarget.DropLastSegment()
+			}
 		}
 	}
 
