@@ -18,8 +18,9 @@ var (
 )
 
 var (
-	selectedNameStyle = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
-	selectedPathStyle = lipgloss.NewStyle().Foreground(selectedColor)
+	selectedLabelStyle = lipgloss.NewStyle().Foreground(selectedColor)
+	selectedNameStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
+	selectedPathStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
 
 	headerStyle = lipgloss.NewStyle().
 			Padding(0, 2).
@@ -115,9 +116,13 @@ func (m model) View() string {
 	}
 
 	var headerContent string
-	if m.list.SelectedItem() != nil {
-		selected := m.list.SelectedItem().(*testCaseItem)
-		headerContent = selectedNameStyle.Render(selected.name) + "\n" + selectedPathStyle.Render(selected.path)
+	if m.tmpTarget != nil {
+		name := selectedLabelStyle.Render("Selected: ") + selectedNameStyle.Render(m.tmpTarget.TestNamePattern)
+		if m.tmpTarget.IsPrefix {
+			name += selectedLabelStyle.Render("*")
+		}
+		pack := selectedLabelStyle.Render(" Package: ") + selectedPathStyle.Render(m.tmpTarget.PackageName)
+		headerContent = name + "\n" + pack
 	} else {
 		headerContent = "\n"
 	}
