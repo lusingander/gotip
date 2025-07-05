@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/gotip/internal/tip"
@@ -18,8 +16,8 @@ func Test(target *tip.Target, extraArgs []string) error {
 		return nil
 	}
 
-	packageName := relativePathToPackageName(target.Path)
-	testNameRegex := testNameToTestRunRegex(target.Name, target.IsUnresolved)
+	packageName := target.RelativePathToPackageName()
+	testNameRegex := target.TestNameToTestRunRegex()
 
 	args := []string{"test", "-run", testNameRegex, packageName}
 	cmd := exec.Command("go", append(args, extraArgs...)...)
@@ -29,20 +27,4 @@ func Test(target *tip.Target, extraArgs []string) error {
 
 	fmt.Println(outputStyle.Render(cmd.String()))
 	return cmd.Run()
-}
-
-func relativePathToPackageName(path string) string {
-	name := filepath.Dir(path)
-	name = filepath.ToSlash(name)
-	if !strings.HasPrefix(name, "./") {
-		name = "./" + name
-	}
-	return name
-}
-
-func testNameToTestRunRegex(name string, isUnresolved bool) string {
-	if isUnresolved {
-		return fmt.Sprintf("^%s", strings.TrimSuffix(name, tip.UnresolvedTestCaseName))
-	}
-	return fmt.Sprintf("^%s$", name)
 }
