@@ -96,7 +96,11 @@ func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
 			}
 			subs = append(subs, findSubTests(s.Body.List, newCs...)...)
 		case *ast.AssignStmt:
-			if c := findStructSliceLiteralDeclaration(s); c != nil {
+			if c := findStructSliceLiteralDeclarationFromAssignStmt(s); c != nil {
+				newCs = append(newCs, c)
+			}
+		case *ast.DeclStmt:
+			if c := findStructSliceLiteralDeclarationFromDeclStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
 		}
@@ -104,7 +108,7 @@ func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
 	return subs
 }
 
-func findStructSliceLiteralDeclaration(assign *ast.AssignStmt) *structSliceLiteralDeclarationContext {
+func findStructSliceLiteralDeclarationFromAssignStmt(assign *ast.AssignStmt) *structSliceLiteralDeclarationContext {
 	if len(assign.Lhs) != 1 || len(assign.Rhs) != 1 {
 		return nil
 	}
@@ -123,6 +127,32 @@ func findStructSliceLiteralDeclaration(assign *ast.AssignStmt) *structSliceLiter
 		ident:   ident.Name,
 		compLit: compLit,
 	}
+}
+
+func findStructSliceLiteralDeclarationFromDeclStmt(decl *ast.DeclStmt) *structSliceLiteralDeclarationContext {
+	genDecl, ok := decl.Decl.(*ast.GenDecl)
+	if !ok || genDecl.Tok != token.VAR {
+		return nil
+	}
+	for _, spec := range genDecl.Specs {
+		valueSpec, ok := spec.(*ast.ValueSpec)
+		if !ok || len(valueSpec.Names) != 1 || len(valueSpec.Values) != 1 {
+			continue
+		}
+		ident := valueSpec.Names[0]
+		compLit, ok := valueSpec.Values[0].(*ast.CompositeLit)
+		if !ok {
+			continue
+		}
+		if _, ok := compLit.Type.(*ast.ArrayType); !ok {
+			continue
+		}
+		return &structSliceLiteralDeclarationContext{
+			ident:   ident.Name,
+			compLit: compLit,
+		}
+	}
+	return nil
 }
 
 func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
