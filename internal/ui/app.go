@@ -11,10 +11,9 @@ import (
 )
 
 var (
-	selectedColor     = lipgloss.Color("#00ADD8")
-	listSelectedColor = lipgloss.Color("#5DC9E2")
-	cursorColor       = lipgloss.Color("#00ADD8")
-	borderColor       = lipgloss.Color("240")
+	selectedColor = lipgloss.Color("#00ADD8")
+	cursorColor   = lipgloss.Color("#00ADD8")
+	borderColor   = lipgloss.Color("240")
 )
 
 var (
@@ -46,10 +45,7 @@ type model struct {
 }
 
 func newModel(items []list.Item) model {
-	itemDelegate := list.NewDefaultDelegate()
-	itemDelegate.Styles.SelectedTitle = itemDelegate.Styles.SelectedTitle.Foreground(listSelectedColor).BorderForeground(listSelectedColor)
-	itemDelegate.Styles.SelectedDesc = itemDelegate.Styles.SelectedDesc.Foreground(listSelectedColor).BorderForeground(listSelectedColor)
-	list := list.New(items, itemDelegate, 0, 0)
+	list := list.New(items, itemDelegate{}, 0, 0)
 	list.SetShowTitle(false)
 	list.SetShowFilter(false)
 	list.SetShowStatusBar(false)
