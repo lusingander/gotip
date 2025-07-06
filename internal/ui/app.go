@@ -26,6 +26,7 @@ var (
 			Border(lipgloss.NormalBorder(), false, false, true, false).
 			BorderForeground(borderColor)
 
+	footerMsgStyle           = lipgloss.NewStyle()
 	footerFilteredStyle      = lipgloss.NewStyle()
 	footerSelectedIndexStyle = lipgloss.NewStyle()
 
@@ -35,9 +36,19 @@ var (
 			BorderForeground(borderColor)
 )
 
+type statusMsgType int
+
+const (
+	noneStatusMsgType statusMsgType = iota
+	fuzzyMatchFilteredStatusMsgType
+	exactMatchFilteredStatusMsgType
+)
+
 type model struct {
-	list list.Model
-	w, h int
+	list            list.Model
+	matchFilterType matchFilterType
+	statusMsgType   statusMsgType
+	w, h            int
 
 	beforeSelected int
 	tmpTarget      *tip.Target
@@ -54,18 +65,35 @@ func newModel(items []list.Item) model {
 	list.FilterInput.Prompt = "Filtering: "
 	list.FilterInput.PromptStyle = lipgloss.NewStyle()
 	list.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
+	list.Filter = fuzzyMatchFilter
+	matchFilterType := fuzzyMatchFilterType
 
 	return model{
-		list:           list,
-		beforeSelected: -1,
-		tmpTarget:      nil,
-		retTarget:      nil,
+		list:            list,
+		matchFilterType: matchFilterType,
+		statusMsgType:   noneStatusMsgType,
+		beforeSelected:  -1,
+		tmpTarget:       nil,
+		retTarget:       nil,
 	}
 }
 
 func (m *model) setSize(w, h int) {
 	m.w, m.h = w, h
 	m.list.SetSize(w, h-5)
+}
+
+func (m *model) toggleMatchFilter() {
+	switch m.matchFilterType {
+	case fuzzyMatchFilterType:
+		m.list.Filter = exactMatchFilter
+		m.matchFilterType = exactMatchFilterType
+		m.statusMsgType = exactMatchFilteredStatusMsgType
+	case exactMatchFilterType:
+		m.list.Filter = fuzzyMatchFilter
+		m.matchFilterType = fuzzyMatchFilterType
+		m.statusMsgType = fuzzyMatchFilteredStatusMsgType
+	}
 }
 
 var _ tea.Model = (*model)(nil)
@@ -81,9 +109,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.setSize(msg.Width, msg.Height)
 	case tea.KeyMsg:
+		// clear status message
+		m.statusMsgType = noneStatusMsgType
+
 		if m.list.FilterState() == list.Filtering {
 			break
 		}
+
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
@@ -93,6 +125,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "backspace", "ctrl+h":
 			if m.tmpTarget != nil {
 				m.tmpTarget.DropLastSegment()
+			}
+		case "ctrl+x":
+			if m.list.FilterState() == list.Unfiltered {
+				m.toggleMatchFilter()
 			}
 		}
 	}
@@ -130,12 +166,21 @@ func (m model) View() string {
 	header := headerStyle.Width(m.w).Render(headerContent)
 
 	var footerStatus string
-	switch m.list.FilterState() {
-	case list.Filtering:
-		footerStatus = strings.TrimRight(m.list.FilterInput.View(), " ")
-	case list.FilterApplied:
-		footerStatus = footerFilteredStyle.
-			Render(fmt.Sprintf("Filtered: %d items [Query: %s]", len(m.list.VisibleItems()), m.list.FilterValue()))
+	switch m.statusMsgType {
+	case noneStatusMsgType:
+		switch m.list.FilterState() {
+		case list.Filtering:
+			footerStatus = strings.TrimRight(m.list.FilterInput.View(), " ")
+		case list.FilterApplied:
+			footerStatus = footerFilteredStyle.
+				Render(fmt.Sprintf("Filtered: %d items [Query: %s]", len(m.list.VisibleItems()), m.list.FilterValue()))
+		}
+	case fuzzyMatchFilteredStatusMsgType:
+		footerStatus = footerMsgStyle.
+			Render("Filter mode: Fuzzy match")
+	case exactMatchFilteredStatusMsgType:
+		footerStatus = footerMsgStyle.
+			Render("Filter mode: Exact match")
 	}
 
 	var footerSelectedIndex string
