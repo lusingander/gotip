@@ -83,6 +83,27 @@ func TestA2_3(t *testing.T) {
 	}
 }
 
+func TestA2_4(t *testing.T) {
+	var tests = []struct {
+		name string
+		a    int
+		b    int
+		want int
+	}{
+		{"test1", 1, 2, 3},
+		{"test2", 2, 3, 5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.a + tt.b
+			if got != tt.want {
+				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestA3(t *testing.T) {
 	tests := map[string]struct {
 		a    int

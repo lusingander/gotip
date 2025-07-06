@@ -59,6 +59,13 @@ func wantTestA() []*tip.TestFunction {
 			},
 		},
 		{
+			Name: "TestA2_4",
+			Subs: []*tip.SubTest{
+				{Name: "test1", Subs: []*tip.SubTest{}},
+				{Name: "test2", Subs: []*tip.SubTest{}},
+			},
+		},
+		{
 			Name: "TestA3",
 			Subs: []*tip.SubTest{
 				{Name: "???", Subs: []*tip.SubTest{}},
