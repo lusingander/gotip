@@ -29,7 +29,7 @@ func Test(target *tip.Target, extraArgs []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	fmt.Println(outputStyle.Render(cmd.String()))
+	fmt.Fprintln(os.Stderr, outputStyle.Render(cmd.String()))
 	return cmd.Run()
 }
 

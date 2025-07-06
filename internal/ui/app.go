@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -200,7 +201,11 @@ func (m model) View() string {
 func Start(tests map[string][]*tip.TestFunction) (*tip.Target, error) {
 	items := toTestCaseItems(tests)
 	m := newModel(items)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(
+		m,
+		tea.WithAltScreen(),
+		tea.WithOutput(os.Stderr),
+	)
 	ret, err := p.Run()
 	if err != nil {
 		return nil, err
