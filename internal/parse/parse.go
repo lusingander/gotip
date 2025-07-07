@@ -162,7 +162,9 @@ func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
 	case *ast.BasicLit:
 		name = findSubTestNameFromBasicLit(e)
 	case *ast.SelectorExpr:
-		name = findSubTestNameFromSelectorExpr(e, cs...)
+		if n := findSubTestNameFromSelectorExpr(e, cs...); n != nil {
+			name = n
+		}
 	case *ast.Ident:
 		name = findSubTestNameFromIdent(e)
 	case *ast.BinaryExpr:
@@ -198,8 +200,12 @@ func findSubTestNameFromBasicLit(lit *ast.BasicLit) *literalSubTestName {
 }
 
 func findSubTestNameFromSelectorExpr(sel *ast.SelectorExpr, cs ...subTestContext) *selectorSubTestName {
+	ident, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return nil
+	}
 	n := &selectorSubTestName{
-		receiver: sel.X.(*ast.Ident).Name,
+		receiver: ident.Name,
 		field:    sel.Sel.Name,
 	}
 	for _, c := range cs {
