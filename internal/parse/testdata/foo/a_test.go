@@ -104,6 +104,30 @@ func TestA2_4(t *testing.T) {
 	}
 }
 
+func TestA2_5(t *testing.T) {
+	type reqParam struct {
+		name string
+		a    int
+		b    int
+	}
+	tests := []struct {
+		req  reqParam
+		want int
+	}{
+		{reqParam{"test1", 1, 2}, 3},
+		{reqParam{"test2", 2, 3}, 5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.req.name, func(t *testing.T) {
+			got := tt.req.a + tt.req.b
+			if got != tt.want {
+				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestA3(t *testing.T) {
 	tests := map[string]struct {
 		a    int
