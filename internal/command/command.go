@@ -11,9 +11,9 @@ import (
 
 var outputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00A29C"))
 
-func Test(target *tip.Target, extraArgs []string) error {
+func Test(target *tip.Target, extraArgs []string) (int, error) {
 	if target == nil {
-		return nil
+		return 0, nil
 	}
 
 	nameRegex := testNameToTestRunRegex(target.TestNamePattern, target.IsPrefix)
@@ -30,7 +30,13 @@ func Test(target *tip.Target, extraArgs []string) error {
 	cmd.Stderr = os.Stderr
 
 	fmt.Fprintln(os.Stderr, outputStyle.Render(cmd.String()))
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); !ok {
+			return 1, err
+		}
+	}
+	return cmd.ProcessState.ExitCode(), nil
 }
 
 func testNameToTestRunRegex(pattern string, isPrefix bool) string {

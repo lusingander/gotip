@@ -11,9 +11,11 @@ import (
 )
 
 func main() {
-	if err := run(os.Args); err != nil {
+	code, err := run(os.Args)
+	if err != nil {
 		log.Fatal(err)
 	}
+	os.Exit(code)
 }
 
 func parseArgs(args []string) ([]string, []string) {
@@ -24,20 +26,20 @@ func parseArgs(args []string) ([]string, []string) {
 	return args[:i], args[i+1:]
 }
 
-func run(args []string) error {
+func run(args []string) (int, error) {
 	_, testArgs := parseArgs(args)
 
 	tests, err := parse.ProcessFilesRecursively(".")
 	if err != nil {
-		return err
+		return 1, err
 	}
 
 	target, err := ui.Start(tests)
 	if err != nil {
-		return err
+		return 1, err
 	}
 	if target == nil {
-		return nil
+		return 0, nil
 	}
 
 	return command.Test(target, testArgs)
