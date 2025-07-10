@@ -55,7 +55,7 @@ If subtest names could not be automatically discovered, gotip defaults to select
 
 | Key                         | Description                                |
 | --------------------------- | ------------------------------------------ |
-| <kbd>Ctrl-C</kbd>           | Quit                                       |
+| <kbd>Ctrl-c</kbd>           | Quit                                       |
 | <kbd>j</kbd> <kbd>↓</kbd>  | Select next item                           |
 | <kbd>k</kbd> <kbd>↑</kbd>  | Select previous item                       |
 | <kbd>l</kbd> <kbd>→</kbd>  | Select next page                           |
@@ -65,6 +65,7 @@ If subtest names could not be automatically discovered, gotip defaults to select
 | <kbd>/</kbd>                | Enter filtering mode                       |
 | <kbd>Enter</kbd>            | Confirm filter (in filtering mode)         |
 | <kbd>Esc</kbd>              | Clear filtering mode                       |
+| <kbd>Ctrl-x</kbd>           | Toggle filtering type                      |
 
 ## Planned features
 
