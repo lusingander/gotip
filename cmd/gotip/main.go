@@ -7,6 +7,7 @@ import (
 
 	"github.com/lusingander/gotip/internal/command"
 	"github.com/lusingander/gotip/internal/parse"
+	"github.com/lusingander/gotip/internal/tip"
 	"github.com/lusingander/gotip/internal/ui"
 )
 
@@ -28,6 +29,10 @@ func parseArgs(args []string) ([]string, []string) {
 
 func run(args []string) (int, error) {
 	_, testArgs := parseArgs(args)
+	conf, err := tip.LoadConfig()
+	if err != nil {
+		return 1, err
+	}
 
 	tests, err := parse.ProcessFilesRecursively(".")
 	if err != nil {
@@ -42,5 +47,5 @@ func run(args []string) (int, error) {
 		return 0, nil
 	}
 
-	return command.Test(target, testArgs)
+	return command.Test(target, testArgs, conf)
 }
