@@ -51,6 +51,39 @@ If subtest names could not be automatically discovered, gotip defaults to select
 
 <img src="./img/group.gif" width=600>
 
+### Config
+
+You can configure gotip by placing a `gotip.toml` file in the current directory.
+
+The format is as follows:
+
+```toml
+# Specifies the command used to run tests.
+# If omitted, the default command is used.
+# type: list of strings
+command = []
+```
+
+#### `command`
+
+The `command` field allows you to customize how tests are executed.
+
+You can use this to always pass specific flags or use an external test runner instead of the default.
+
+For example, to use [gotestsum](https://github.com/gotestyourself/gotestsum), you can configure it like this:
+
+```toml
+command = ["gotestsum", "--format", "testname", "--", "-run", "${name}", "${package}"]
+```
+
+`${name}` and `${package}` are placeholders that will be replaced at runtime with the selected test name pattern and package name, respectively.
+
+If not specified, the following default command is used:
+
+```toml
+command = ["go", "test", "-run", "${name}", "${package}"]
+```
+
 ### Keybindings
 
 | Key                         | Description                                |
@@ -71,7 +104,6 @@ If subtest names could not be automatically discovered, gotip defaults to select
 
 - Persistent test execution history with ability to re-run from history
 - Launch with initial filter based on package or test name
-- Customizable test command execution
 - Custom keybindings
 
 ## License
