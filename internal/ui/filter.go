@@ -19,20 +19,19 @@ func fuzzyMatchFilter(term string, targets []string) []list.Rank {
 }
 
 func exactMatchFilter(term string, targets []string) []list.Rank {
-	// todo: consider multi-byte characters
 	ranks := make([]list.Rank, 0, len(targets))
 	termLower := strings.ToLower(term)
 	for i, target := range targets {
 		targetLower := strings.ToLower(target)
 		if idx := strings.Index(targetLower, termLower); idx != -1 {
 			matchedIndexes := make([]int, 0)
-			for j := range len(termLower) {
+			for j := range termLower {
 				matchedIndexes = append(matchedIndexes, idx+j)
 			}
 			ranks = append(ranks, list.Rank{Index: i, MatchedIndexes: matchedIndexes})
 		}
 	}
-	return ranks
+	return convertRanks(ranks, targets)
 }
 
 func convertRanks(ranks []list.Rank, targets []string) []list.Rank {
