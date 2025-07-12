@@ -14,8 +14,8 @@ const (
 )
 
 func fuzzyMatchFilter(term string, targets []string) []list.Rank {
-	// todo: consider multi-byte characters
-	return list.DefaultFilter(term, targets)
+	ranks := list.DefaultFilter(term, targets)
+	return convertRanks(ranks, targets)
 }
 
 func exactMatchFilter(term string, targets []string) []list.Rank {
@@ -33,4 +33,32 @@ func exactMatchFilter(term string, targets []string) []list.Rank {
 		}
 	}
 	return ranks
+}
+
+func convertRanks(ranks []list.Rank, targets []string) []list.Rank {
+	ret := make([]list.Rank, len(ranks))
+	for i, rank := range ranks {
+		target := targets[rank.Index]
+		ret[i] = list.Rank{
+			Index:          rank.Index,
+			MatchedIndexes: byteOffsetsToRuneIndices(target, rank.MatchedIndexes),
+		}
+	}
+	return ret
+}
+
+func byteOffsetsToRuneIndices(s string, offsets []int) []int {
+	m := make(map[int]int)
+	byteOffset := 0
+	runeIndex := 0
+	for _, r := range s {
+		m[byteOffset] = runeIndex
+		byteOffset += len(string(r))
+		runeIndex++
+	}
+	runeIndices := make([]int, 0, len(offsets))
+	for _, offset := range offsets {
+		runeIndices = append(runeIndices, m[offset])
+	}
+	return runeIndices
 }
