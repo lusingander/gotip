@@ -26,6 +26,7 @@ func newHistories(projectDir string) (*Histories, error) {
 }
 
 func (h *Histories) Add(target *Target, limit int) {
+	// todo: check if history already exists
 	history := &History{
 		Path:            target.Path,
 		PackageName:     target.PackageName,
