@@ -17,6 +17,7 @@ type SubTest struct {
 }
 
 type Target struct {
+	Path            string
 	PackageName     string
 	TestNamePattern string
 	IsPrefix        bool
@@ -27,6 +28,7 @@ func NewTarget(path, name string, isUnresolved bool) *Target {
 		name = strings.TrimSuffix(name, UnresolvedTestCaseName)
 	}
 	return &Target{
+		Path:            path,
 		PackageName:     relativePathToPackageName(path),
 		TestNamePattern: name,
 		IsPrefix:        isUnresolved,
