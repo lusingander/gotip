@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 )
 
@@ -26,7 +27,6 @@ func newHistories(projectDir string) (*Histories, error) {
 }
 
 func (h *Histories) Add(target *Target, limit int) {
-	// todo: check if history already exists
 	history := &History{
 		Path:            target.Path,
 		PackageName:     target.PackageName,
@@ -34,6 +34,12 @@ func (h *Histories) Add(target *Target, limit int) {
 		IsPrefix:        target.IsPrefix,
 		RunAt:           time.Now(),
 	}
+
+	// Remove existing history if it refers to the same test to avoid duplicates
+	if i := slices.IndexFunc(h.Histories, history.referToSameHistory); i >= 0 {
+		h.Histories = append(h.Histories[:i], h.Histories[i+1:]...)
+	}
+
 	h.Histories = append([]*History{history}, h.Histories...)
 	if limit >= 0 && len(h.Histories) > limit {
 		h.Histories = h.Histories[:limit]

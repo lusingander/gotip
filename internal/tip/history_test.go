@@ -35,6 +35,20 @@ func TestHistoriesAdd(t *testing.T) {
 	assertHistoryTestName(t, sut.Histories[0], "TestF")
 	assertHistoryTestName(t, sut.Histories[1], "TestE")
 	assertHistoryTestName(t, sut.Histories[2], "TestD")
+
+	sut.Add(NewTarget("./foo/foo_test.go", "TestE", false), 3)
+
+	assertHistoriesCount(t, sut, 3)
+	assertHistoryTestName(t, sut.Histories[0], "TestE")
+	assertHistoryTestName(t, sut.Histories[1], "TestF")
+	assertHistoryTestName(t, sut.Histories[2], "TestD")
+
+	sut.Add(NewTarget("./foo/foo_test.go", "TestE", false), 5)
+
+	assertHistoriesCount(t, sut, 3)
+	assertHistoryTestName(t, sut.Histories[0], "TestE")
+	assertHistoryTestName(t, sut.Histories[1], "TestF")
+	assertHistoryTestName(t, sut.Histories[2], "TestD")
 }
 
 func assertHistoriesCount(t *testing.T, histories *Histories, wantCount int) {
