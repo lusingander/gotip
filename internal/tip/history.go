@@ -34,7 +34,7 @@ func (h *Histories) Add(target *Target, limit int) {
 		RunAt:           time.Now(),
 	}
 	h.Histories = append([]*History{history}, h.Histories...)
-	if len(h.Histories) > limit {
+	if limit >= 0 && len(h.Histories) > limit {
 		h.Histories = h.Histories[:limit]
 	}
 }
