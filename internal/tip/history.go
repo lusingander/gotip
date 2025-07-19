@@ -25,7 +25,7 @@ func newHistories(projectDir string) (*Histories, error) {
 	}, nil
 }
 
-func (h *Histories) Add(target *Target) {
+func (h *Histories) Add(target *Target, limit int) {
 	history := &History{
 		Path:            target.Path,
 		PackageName:     target.PackageName,
@@ -34,6 +34,9 @@ func (h *Histories) Add(target *Target) {
 		RunAt:           time.Now(),
 	}
 	h.Histories = append([]*History{history}, h.Histories...)
+	if len(h.Histories) > limit {
+		h.Histories = h.Histories[:limit]
+	}
 }
 
 type History struct {

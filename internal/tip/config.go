@@ -8,15 +8,19 @@ import (
 
 const (
 	configFileName = "gotip.toml"
+
+	defaultHistoryLimit = 100
 )
 
 type Config struct {
-	Command []string `toml:"command"`
+	Command      []string `toml:"command"`
+	HistoryLimit int      `toml:"history_limit"`
 }
 
 func defaultConfig() *Config {
 	return &Config{
-		Command: []string{},
+		Command:      []string{},
+		HistoryLimit: defaultHistoryLimit,
 	}
 }
 
