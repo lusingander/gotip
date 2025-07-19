@@ -9,7 +9,32 @@ import (
 	"time"
 )
 
-type Histories []*History
+type Histories struct {
+	ProjectDir string
+	Histories  []*History
+}
+
+func newHistories(projectDir string) (*Histories, error) {
+	absDir, err := filepath.Abs(projectDir)
+	if err != nil {
+		return nil, err
+	}
+	return &Histories{
+		ProjectDir: absDir,
+		Histories:  []*History{},
+	}, nil
+}
+
+func (h *Histories) Add(target *Target) {
+	history := &History{
+		Path:            target.Path,
+		PackageName:     target.PackageName,
+		TestNamePattern: target.TestNamePattern,
+		IsPrefix:        target.IsPrefix,
+		RunAt:           time.Now(),
+	}
+	h.Histories = append([]*History{history}, h.Histories...)
+}
 
 type History struct {
 	Path            string
@@ -26,7 +51,7 @@ func LoadHistories(projectDir string) (*Histories, error) {
 	}
 
 	if _, err := os.Stat(filePath); err != nil {
-		return &Histories{}, nil
+		return newHistories(projectDir)
 	}
 
 	bytes, err := os.ReadFile(filePath)
