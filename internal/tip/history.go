@@ -48,6 +48,13 @@ type History struct {
 	RunAt           time.Time
 }
 
+func (h *History) referToSameHistory(other *History) bool {
+	return h.Path == other.Path &&
+		h.PackageName == other.PackageName &&
+		h.TestNamePattern == other.TestNamePattern &&
+		h.IsPrefix == other.IsPrefix
+}
+
 func LoadHistories(projectDir string) (*Histories, error) {
 	filePath, err := projectHistoriesFilePath(projectDir)
 	if err != nil {
