@@ -33,6 +33,10 @@ func run(args []string) (int, error) {
 	if err != nil {
 		return 1, err
 	}
+	histories, err := tip.LoadHistories(".")
+	if err != nil {
+		return 1, err
+	}
 
 	tests, err := parse.ProcessFilesRecursively(".")
 	if err != nil {
@@ -47,5 +51,15 @@ func run(args []string) (int, error) {
 		return 0, nil
 	}
 
-	return command.Test(target, testArgs, conf)
+	code, err := command.Test(target, testArgs, conf)
+	if err != nil {
+		return 1, err
+	}
+
+	histories.Add(target)
+	if err := tip.SaveHistories(".", histories); err != nil {
+		return 1, err
+	}
+
+	return code, nil
 }
