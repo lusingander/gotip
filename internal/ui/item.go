@@ -56,14 +56,6 @@ func toTestCaseItemsFromSubTests(ss []*tip.SubTest, path, base string) []list.It
 	return items
 }
 
-func (i *testCaseItem) Title() string {
-	return i.name
-}
-
-func (i *testCaseItem) Description() string {
-	return i.path
-}
-
 func (i *testCaseItem) FilterValue() string {
 	return i.name
 }

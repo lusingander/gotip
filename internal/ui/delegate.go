@@ -69,9 +69,9 @@ func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item 
 		matchedRunes []int
 	)
 
-	i := item.(list.DefaultItem)
-	title = i.Title()
-	desc = i.Description()
+	i := item.(*testCaseItem)
+	title = i.name
+	desc = i.path
 
 	if m.Width() <= 0 {
 		return
