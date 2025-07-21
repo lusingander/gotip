@@ -57,7 +57,7 @@ type model struct {
 }
 
 func newModel(items []list.Item) model {
-	list := list.New(items, itemDelegate{}, 0, 0)
+	list := list.New(items, testCaseItemDelegate{}, 0, 0)
 	list.SetShowTitle(false)
 	list.SetShowFilter(false)
 	list.SetShowStatusBar(false)

@@ -49,21 +49,21 @@ const (
 	ellipsis = "…"
 )
 
-type itemDelegate struct{}
+type testCaseItemDelegate struct{}
 
-func (d itemDelegate) Height() int {
+func (d testCaseItemDelegate) Height() int {
 	return 2
 }
 
-func (d itemDelegate) Spacing() int {
+func (d testCaseItemDelegate) Spacing() int {
 	return 1
 }
 
-func (d itemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
+func (d testCaseItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 	return nil
 }
 
-func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
+func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
 	var (
 		title, desc  string
 		matchedRunes []int
