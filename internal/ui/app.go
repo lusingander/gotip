@@ -152,6 +152,8 @@ func (m model) View() string {
 		return ""
 	}
 
+	currentList := m.list
+
 	var headerContent string
 	if m.tmpTarget != nil {
 		name := selectedLabelStyle.Render("Selected: ") + selectedNameStyle.Render(m.tmpTarget.TestNamePattern)
@@ -169,12 +171,12 @@ func (m model) View() string {
 	var footerStatus string
 	switch m.statusMsgType {
 	case noneStatusMsgType:
-		switch m.list.FilterState() {
+		switch currentList.FilterState() {
 		case list.Filtering:
-			footerStatus = strings.TrimRight(m.list.FilterInput.View(), " ")
+			footerStatus = strings.TrimRight(currentList.FilterInput.View(), " ")
 		case list.FilterApplied:
 			footerStatus = footerFilteredStyle.
-				Render(fmt.Sprintf("Filtered: %d items [Query: %s]", len(m.list.VisibleItems()), m.list.FilterValue()))
+				Render(fmt.Sprintf("Filtered: %d items [Query: %s]", len(currentList.VisibleItems()), currentList.FilterValue()))
 		}
 	case fuzzyMatchFilteredStatusMsgType:
 		footerStatus = footerMsgStyle.
@@ -185,9 +187,9 @@ func (m model) View() string {
 	}
 
 	var footerSelectedIndex string
-	if len(m.list.VisibleItems()) > 0 {
+	if len(currentList.VisibleItems()) > 0 {
 		footerSelectedIndex = footerSelectedIndexStyle.
-			Render(fmt.Sprintf("%d / %d", m.list.Index()+1, len(m.list.VisibleItems())))
+			Render(fmt.Sprintf("%d / %d", currentList.Index()+1, len(currentList.VisibleItems())))
 	}
 
 	footerSpaceWidth := m.w - lipgloss.Width(footerStatus) - lipgloss.Width(footerSelectedIndex) - 2 /* padding */
@@ -195,7 +197,7 @@ func (m model) View() string {
 
 	footer := footerStyle.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex)
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, m.list.View(), footer)
+	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
 }
 
 func Start(tests map[string][]*tip.TestFunction) (*tip.Target, error) {
