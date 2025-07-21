@@ -37,6 +37,13 @@ var (
 			BorderForeground(borderColor)
 )
 
+type view int
+
+const (
+	allView view = iota
+	historyView
+)
+
 type statusMsgType int
 
 const (
@@ -47,6 +54,8 @@ const (
 
 type model struct {
 	allList         list.Model
+	historyList     list.Model
+	currentView     view
 	matchFilterType matchFilterType
 	statusMsgType   statusMsgType
 	w, h            int
@@ -67,11 +76,23 @@ func newModel(items []list.Item) model {
 	allList.FilterInput.PromptStyle = lipgloss.NewStyle()
 	allList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
 	allList.Filter = fuzzyMatchFilter
-	matchFilterType := fuzzyMatchFilterType
+
+	historyList := list.New(nil, list.DefaultDelegate{}, 0, 0)
+	historyList.SetShowTitle(false)
+	historyList.SetShowFilter(false)
+	historyList.SetShowStatusBar(false)
+	historyList.SetShowHelp(false)
+	historyList.SetShowPagination(false)
+	historyList.FilterInput.Prompt = "Filtering: "
+	historyList.FilterInput.PromptStyle = lipgloss.NewStyle()
+	historyList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
+	historyList.Filter = fuzzyMatchFilter
 
 	return model{
 		allList:         allList,
-		matchFilterType: matchFilterType,
+		historyList:     historyList,
+		currentView:     allView,
+		matchFilterType: fuzzyMatchFilterType,
 		statusMsgType:   noneStatusMsgType,
 		beforeSelected:  -1,
 		tmpTarget:       nil,
@@ -82,18 +103,30 @@ func newModel(items []list.Item) model {
 func (m *model) setSize(w, h int) {
 	m.w, m.h = w, h
 	m.allList.SetSize(w, h-5)
+	m.historyList.SetSize(w, h-5)
 }
 
 func (m *model) toggleMatchFilter() {
 	switch m.matchFilterType {
 	case fuzzyMatchFilterType:
 		m.allList.Filter = exactMatchFilter
+		m.historyList.Filter = exactMatchFilter
 		m.matchFilterType = exactMatchFilterType
 		m.statusMsgType = exactMatchFilteredStatusMsgType
 	case exactMatchFilterType:
 		m.allList.Filter = fuzzyMatchFilter
+		m.historyList.Filter = fuzzyMatchFilter
 		m.matchFilterType = fuzzyMatchFilterType
 		m.statusMsgType = fuzzyMatchFilteredStatusMsgType
+	}
+}
+
+func (m *model) toggleView() {
+	switch m.currentView {
+	case allView:
+		m.currentView = historyView
+	case historyView:
+		m.currentView = allView
 	}
 }
 
@@ -113,7 +146,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// clear status message
 		m.statusMsgType = noneStatusMsgType
 
-		if m.allList.FilterState() == list.Filtering {
+		if m.allList.FilterState() == list.Filtering || m.historyList.FilterState() == list.Filtering {
 			break
 		}
 
@@ -127,21 +160,36 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.tmpTarget != nil {
 				m.tmpTarget.DropLastSegment()
 			}
+		case "tab", "shift+tab":
+			m.toggleView()
 		case "ctrl+x":
-			if m.allList.FilterState() == list.Unfiltered {
+			if m.allList.FilterState() == list.Unfiltered || m.historyList.FilterState() == list.Unfiltered {
 				m.toggleMatchFilter()
 			}
 		}
 	}
 
-	newList, cmd := m.allList.Update(msg)
-	m.allList = newList
-	cmds = append(cmds, cmd)
+	switch m.currentView {
+	case allView:
+		newList, cmd := m.allList.Update(msg)
+		m.allList = newList
+		cmds = append(cmds, cmd)
 
-	if m.beforeSelected != m.allList.GlobalIndex() && m.allList.SelectedItem() != nil {
-		selected := m.allList.SelectedItem().(*testCaseItem)
-		m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
-		m.beforeSelected = m.allList.GlobalIndex()
+		if m.beforeSelected != m.allList.GlobalIndex() && m.allList.SelectedItem() != nil {
+			selected := m.allList.SelectedItem().(*testCaseItem)
+			m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
+			m.beforeSelected = m.allList.GlobalIndex()
+		}
+	case historyView:
+		newList, cmd := m.historyList.Update(msg)
+		m.historyList = newList
+		cmds = append(cmds, cmd)
+
+		// if m.beforeSelected != m.historyList.GlobalIndex() && m.historyList.SelectedItem() != nil {
+		// 	selected := m.historyList.SelectedItem().(*testCaseItem)
+		// 	m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
+		// 	m.beforeSelected = m.historyList.GlobalIndex()
+		// }
 	}
 
 	return m, tea.Batch(cmds...)
@@ -152,7 +200,13 @@ func (m model) View() string {
 		return ""
 	}
 
-	currentList := m.allList
+	var currentList list.Model
+	switch m.currentView {
+	case allView:
+		currentList = m.allList
+	case historyView:
+		currentList = m.historyList
+	}
 
 	var headerContent string
 	if m.tmpTarget != nil {
