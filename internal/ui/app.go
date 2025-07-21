@@ -46,7 +46,7 @@ const (
 )
 
 type model struct {
-	list            list.Model
+	allList         list.Model
 	matchFilterType matchFilterType
 	statusMsgType   statusMsgType
 	w, h            int
@@ -57,20 +57,20 @@ type model struct {
 }
 
 func newModel(items []list.Item) model {
-	list := list.New(items, testCaseItemDelegate{}, 0, 0)
-	list.SetShowTitle(false)
-	list.SetShowFilter(false)
-	list.SetShowStatusBar(false)
-	list.SetShowHelp(false)
-	list.SetShowPagination(false)
-	list.FilterInput.Prompt = "Filtering: "
-	list.FilterInput.PromptStyle = lipgloss.NewStyle()
-	list.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
-	list.Filter = fuzzyMatchFilter
+	allList := list.New(items, testCaseItemDelegate{}, 0, 0)
+	allList.SetShowTitle(false)
+	allList.SetShowFilter(false)
+	allList.SetShowStatusBar(false)
+	allList.SetShowHelp(false)
+	allList.SetShowPagination(false)
+	allList.FilterInput.Prompt = "Filtering: "
+	allList.FilterInput.PromptStyle = lipgloss.NewStyle()
+	allList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
+	allList.Filter = fuzzyMatchFilter
 	matchFilterType := fuzzyMatchFilterType
 
 	return model{
-		list:            list,
+		allList:         allList,
 		matchFilterType: matchFilterType,
 		statusMsgType:   noneStatusMsgType,
 		beforeSelected:  -1,
@@ -81,17 +81,17 @@ func newModel(items []list.Item) model {
 
 func (m *model) setSize(w, h int) {
 	m.w, m.h = w, h
-	m.list.SetSize(w, h-5)
+	m.allList.SetSize(w, h-5)
 }
 
 func (m *model) toggleMatchFilter() {
 	switch m.matchFilterType {
 	case fuzzyMatchFilterType:
-		m.list.Filter = exactMatchFilter
+		m.allList.Filter = exactMatchFilter
 		m.matchFilterType = exactMatchFilterType
 		m.statusMsgType = exactMatchFilteredStatusMsgType
 	case exactMatchFilterType:
-		m.list.Filter = fuzzyMatchFilter
+		m.allList.Filter = fuzzyMatchFilter
 		m.matchFilterType = fuzzyMatchFilterType
 		m.statusMsgType = fuzzyMatchFilteredStatusMsgType
 	}
@@ -113,7 +113,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// clear status message
 		m.statusMsgType = noneStatusMsgType
 
-		if m.list.FilterState() == list.Filtering {
+		if m.allList.FilterState() == list.Filtering {
 			break
 		}
 
@@ -128,20 +128,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tmpTarget.DropLastSegment()
 			}
 		case "ctrl+x":
-			if m.list.FilterState() == list.Unfiltered {
+			if m.allList.FilterState() == list.Unfiltered {
 				m.toggleMatchFilter()
 			}
 		}
 	}
 
-	newList, cmd := m.list.Update(msg)
-	m.list = newList
+	newList, cmd := m.allList.Update(msg)
+	m.allList = newList
 	cmds = append(cmds, cmd)
 
-	if m.beforeSelected != m.list.GlobalIndex() && m.list.SelectedItem() != nil {
-		selected := m.list.SelectedItem().(*testCaseItem)
+	if m.beforeSelected != m.allList.GlobalIndex() && m.allList.SelectedItem() != nil {
+		selected := m.allList.SelectedItem().(*testCaseItem)
 		m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
-		m.beforeSelected = m.list.GlobalIndex()
+		m.beforeSelected = m.allList.GlobalIndex()
 	}
 
 	return m, tea.Batch(cmds...)
@@ -152,7 +152,7 @@ func (m model) View() string {
 		return ""
 	}
 
-	currentList := m.list
+	currentList := m.allList
 
 	var headerContent string
 	if m.tmpTarget != nil {
