@@ -43,7 +43,7 @@ func run(args []string) (int, error) {
 		return 1, err
 	}
 
-	target, err := ui.Start(tests)
+	target, err := ui.Start(tests, histories)
 	if err != nil {
 		return 1, err
 	}

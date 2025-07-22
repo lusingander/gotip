@@ -60,13 +60,14 @@ type model struct {
 	statusMsgType   statusMsgType
 	w, h            int
 
-	beforeSelected int
-	tmpTarget      *tip.Target
-	retTarget      *tip.Target
+	allBeforeSelected     int
+	historyBeforeSelected int
+	tmpTarget             *tip.Target
+	retTarget             *tip.Target
 }
 
-func newModel(items []list.Item) model {
-	allList := list.New(items, testCaseItemDelegate{}, 0, 0)
+func newModel(allTestItems, historyItems []list.Item) model {
+	allList := list.New(allTestItems, testCaseItemDelegate{}, 0, 0)
 	allList.SetShowTitle(false)
 	allList.SetShowFilter(false)
 	allList.SetShowStatusBar(false)
@@ -77,7 +78,7 @@ func newModel(items []list.Item) model {
 	allList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
 	allList.Filter = fuzzyMatchFilter
 
-	historyList := list.New(nil, list.DefaultDelegate{}, 0, 0)
+	historyList := list.New(historyItems, historyItemDelegate{}, 0, 0)
 	historyList.SetShowTitle(false)
 	historyList.SetShowFilter(false)
 	historyList.SetShowStatusBar(false)
@@ -89,14 +90,15 @@ func newModel(items []list.Item) model {
 	historyList.Filter = fuzzyMatchFilter
 
 	return model{
-		allList:         allList,
-		historyList:     historyList,
-		currentView:     allView,
-		matchFilterType: fuzzyMatchFilterType,
-		statusMsgType:   noneStatusMsgType,
-		beforeSelected:  -1,
-		tmpTarget:       nil,
-		retTarget:       nil,
+		allList:               allList,
+		historyList:           historyList,
+		currentView:           allView,
+		matchFilterType:       fuzzyMatchFilterType,
+		statusMsgType:         noneStatusMsgType,
+		allBeforeSelected:     -1,
+		historyBeforeSelected: -1,
+		tmpTarget:             nil,
+		retTarget:             nil,
 	}
 }
 
@@ -125,8 +127,26 @@ func (m *model) toggleView() {
 	switch m.currentView {
 	case allView:
 		m.currentView = historyView
+		m.updateCurrentSelectedHistoryItem()
 	case historyView:
 		m.currentView = allView
+		m.updateCurrentSelectedAllItem()
+	}
+}
+
+func (m *model) updateCurrentSelectedAllItem() {
+	if m.allList.SelectedItem() != nil {
+		selected := m.allList.SelectedItem().(*testCaseItem)
+		m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
+		m.allBeforeSelected = m.allList.GlobalIndex()
+	}
+}
+
+func (m *model) updateCurrentSelectedHistoryItem() {
+	if m.historyList.SelectedItem() != nil {
+		selected := m.historyList.SelectedItem().(*historyItem)
+		m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
+		m.historyBeforeSelected = m.historyList.GlobalIndex()
 	}
 }
 
@@ -175,21 +195,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.allList = newList
 		cmds = append(cmds, cmd)
 
-		if m.beforeSelected != m.allList.GlobalIndex() && m.allList.SelectedItem() != nil {
-			selected := m.allList.SelectedItem().(*testCaseItem)
-			m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
-			m.beforeSelected = m.allList.GlobalIndex()
+		if m.allBeforeSelected != m.allList.GlobalIndex() {
+			m.updateCurrentSelectedAllItem()
 		}
 	case historyView:
 		newList, cmd := m.historyList.Update(msg)
 		m.historyList = newList
 		cmds = append(cmds, cmd)
 
-		// if m.beforeSelected != m.historyList.GlobalIndex() && m.historyList.SelectedItem() != nil {
-		// 	selected := m.historyList.SelectedItem().(*testCaseItem)
-		// 	m.tmpTarget = tip.NewTarget(selected.path, selected.name, selected.isUnresolved)
-		// 	m.beforeSelected = m.historyList.GlobalIndex()
-		// }
+		if m.historyBeforeSelected != m.historyList.GlobalIndex() {
+			m.updateCurrentSelectedHistoryItem()
+		}
 	}
 
 	return m, tea.Batch(cmds...)
@@ -254,9 +270,10 @@ func (m model) View() string {
 	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
 }
 
-func Start(tests map[string][]*tip.TestFunction) (*tip.Target, error) {
-	items := toTestCaseItems(tests)
-	m := newModel(items)
+func Start(tests map[string][]*tip.TestFunction, histories *tip.Histories) (*tip.Target, error) {
+	allTestItems := toTestCaseItems(tests)
+	historyItems := toHistoryItems(histories)
+	m := newModel(allTestItems, historyItems)
 	p := tea.NewProgram(
 		m,
 		tea.WithAltScreen(),
