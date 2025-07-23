@@ -138,7 +138,7 @@ func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item 
 type historyItemDelegate struct{}
 
 func (d historyItemDelegate) Height() int {
-	return 2
+	return 3
 }
 
 func (d historyItemDelegate) Spacing() int {
@@ -151,13 +151,14 @@ func (d historyItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 
 func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
 	var (
-		title, desc  string
-		matchedRunes []int
+		title, desc, runAt string
+		matchedRunes       []int
 	)
 
 	i := item.(*historyItem)
 	title = i.name
 	desc = i.path
+	runAt = i.runAt
 
 	if m.Width() <= 0 {
 		return
@@ -197,6 +198,7 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 			}
 			title = listSelectedTitleStyle.Render(title)
 			desc = listSelectedDescStyle.Render(desc)
+			runAt = listSelectedDescStyle.Render(runAt)
 		} else {
 			if m.FilterState() == list.Filtering {
 				if isFiltered {
@@ -206,6 +208,7 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 				}
 				title = listDimmedTitleStyle.Render(title)
 				desc = listDimmedDescStyle.Render(desc)
+				runAt = listDimmedDescStyle.Render(runAt)
 			} else {
 				if isFiltered {
 					unmatched := listNormalTitleStyle.Inline(true)
@@ -214,9 +217,10 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 				}
 				title = listNormalTitleStyle.Render(title)
 				desc = listNormalDescStyle.Render(desc)
+				runAt = listNormalDescStyle.Render(runAt)
 			}
 		}
 	}
 
-	fmt.Fprintf(w, "%s\n%s", title, desc)
+	fmt.Fprintf(w, "%s\n%s\n%s", title, desc, runAt)
 }
