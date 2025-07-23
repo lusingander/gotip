@@ -30,6 +30,7 @@ var (
 	footerMsgStyle           = lipgloss.NewStyle()
 	footerFilteredStyle      = lipgloss.NewStyle()
 	footerSelectedIndexStyle = lipgloss.NewStyle()
+	footerDividerStyle       = lipgloss.NewStyle().Foreground(borderColor)
 
 	footerStyle = lipgloss.NewStyle().
 			Padding(0, 1).
@@ -262,10 +263,18 @@ func (m model) View() string {
 			Render(fmt.Sprintf("%d / %d", currentList.Index()+1, len(currentList.VisibleItems())))
 	}
 
-	footerSpaceWidth := m.w - lipgloss.Width(footerStatus) - lipgloss.Width(footerSelectedIndex) - 2 /* padding */
+	var footerView string
+	switch m.currentView {
+	case allView:
+		footerView = footerDividerStyle.Render(" | ") + footerMsgStyle.Render("All Tests")
+	case historyView:
+		footerView = footerDividerStyle.Render(" | ") + footerMsgStyle.Render("History  ")
+	}
+
+	footerSpaceWidth := m.w - lipgloss.Width(footerStatus) - lipgloss.Width(footerSelectedIndex) - lipgloss.Width(footerView) - 2 /* padding */
 	footerSpace := strings.Repeat(" ", footerSpaceWidth)
 
-	footer := footerStyle.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex)
+	footer := footerStyle.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex + footerView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
 }
