@@ -189,6 +189,7 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 	if emptyFilter {
 		title = listDimmedTitleStyle.Render(title)
 		desc = listDimmedDescStyle.Render(desc)
+		runAt = listDimmedDescStyle.Render(runAt)
 	} else {
 		if isSelected && m.FilterState() != list.Filtering {
 			if isFiltered {
