@@ -13,14 +13,20 @@ const (
 )
 
 type Config struct {
-	Command      []string `toml:"command"`
-	HistoryLimit int      `toml:"history_limit"`
+	Command []string      `toml:"command"`
+	History HistoryConfig `toml:"history"`
+}
+
+type HistoryConfig struct {
+	Limit int `toml:"limit"`
 }
 
 func defaultConfig() *Config {
 	return &Config{
-		Command:      []string{},
-		HistoryLimit: defaultHistoryLimit,
+		Command: []string{},
+		History: HistoryConfig{
+			Limit: defaultHistoryLimit,
+		},
 	}
 }
 

@@ -56,7 +56,7 @@ func run(args []string) (int, error) {
 		return 1, err
 	}
 
-	histories.Add(target, conf.HistoryLimit)
+	histories.Add(target, conf.History.Limit)
 	if err := tip.SaveHistories(".", histories); err != nil {
 		return 1, err
 	}
