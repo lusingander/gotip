@@ -3,7 +3,6 @@ package ui
 import (
 	"cmp"
 	"slices"
-	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/lusingander/gotip/internal/tip"
@@ -70,14 +69,14 @@ type historyItem struct {
 
 var _ list.Item = (*historyItem)(nil)
 
-func toHistoryItems(histories *tip.Histories) []list.Item {
+func toHistoryItems(histories *tip.Histories, dateFormat string) []list.Item {
 	items := make([]list.Item, 0)
 	for _, h := range histories.Histories {
 		item := &historyItem{
 			path:         h.Path,
 			name:         h.TestNamePattern,
 			isUnresolved: h.IsPrefix,
-			runAt:        h.RunAt.Format(time.DateTime),
+			runAt:        h.RunAt.Format(dateFormat),
 		}
 		items = append(items, item)
 	}

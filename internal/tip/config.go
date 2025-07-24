@@ -10,6 +10,7 @@ const (
 	configFileName = "gotip.toml"
 
 	defaultHistoryLimit = 100
+	defaultDateFormat   = "2006-01-02 15:04:05"
 )
 
 type Config struct {
@@ -18,14 +19,16 @@ type Config struct {
 }
 
 type HistoryConfig struct {
-	Limit int `toml:"limit"`
+	Limit      int    `toml:"limit"`
+	DateFormat string `toml:"date_format"`
 }
 
 func defaultConfig() *Config {
 	return &Config{
 		Command: []string{},
 		History: HistoryConfig{
-			Limit: defaultHistoryLimit,
+			Limit:      defaultHistoryLimit,
+			DateFormat: defaultDateFormat,
 		},
 	}
 }

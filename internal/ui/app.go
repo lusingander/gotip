@@ -279,9 +279,9 @@ func (m model) View() string {
 	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
 }
 
-func Start(tests map[string][]*tip.TestFunction, histories *tip.Histories) (*tip.Target, error) {
+func Start(tests map[string][]*tip.TestFunction, histories *tip.Histories, conf *tip.Config) (*tip.Target, error) {
 	allTestItems := toTestCaseItems(tests)
-	historyItems := toHistoryItems(histories)
+	historyItems := toHistoryItems(histories, conf.History.DateFormat)
 	m := newModel(allTestItems, historyItems)
 	p := tea.NewProgram(
 		m,
