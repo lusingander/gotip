@@ -13,6 +13,7 @@ Key features:
 - Fuzzy filtering of test cases
 - Detection of subtest names defined via table-driven tests (partial support)
 - Run individual subtests or grouped subtests
+- View and re-run tests from execution history
 
 ## Installation
 
@@ -51,6 +52,16 @@ If subtest names could not be automatically discovered, gotip defaults to select
 
 <img src="./img/group.gif" width=600>
 
+### Using test history
+
+Press <kbd>Tab</kbd> to switch to History view.
+
+In this view, you can select and run tests from your previous execution history, just like in the regular view.
+
+The history data is stored under `.local/state/gotip/history/`.
+
+<img src="./img/history.gif" width=600>
+
 ### Config
 
 You can configure gotip by placing a `gotip.toml` file in the current directory.
@@ -62,6 +73,15 @@ The format is as follows:
 # If omitted, the default command is used.
 # type: list of strings
 command = []
+
+[history]
+# Limits the number of test executions to keep in history.
+# type: integer
+limit = 100
+# Format used to display timestamps in the history view.
+# Uses Go's time format syntax.
+# type: string
+date_format = "2006-01-02 15:04:05"
 ```
 
 #### `command`
@@ -99,10 +119,10 @@ command = ["go", "test", "-run", "${name}", "${package}"]
 | <kbd>Enter</kbd>            | Confirm filter (in filtering mode)         |
 | <kbd>Esc</kbd>              | Clear filtering mode                       |
 | <kbd>Ctrl-x</kbd>           | Toggle filtering type                      |
+| <kbd>Tab</kbd>.             | Switch view                                |
 
 ## Planned features
 
-- Persistent test execution history with ability to re-run from history
 - Launch with initial filter based on package or test name
 - Custom keybindings
 
