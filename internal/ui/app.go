@@ -68,28 +68,8 @@ type model struct {
 }
 
 func newModel(allTestItems, historyItems []list.Item) model {
-	allList := list.New(allTestItems, testCaseItemDelegate{}, 0, 0)
-	allList.SetShowTitle(false)
-	allList.SetShowFilter(false)
-	allList.SetShowStatusBar(false)
-	allList.SetShowHelp(false)
-	allList.SetShowPagination(false)
-	allList.FilterInput.Prompt = "Filtering: "
-	allList.FilterInput.PromptStyle = lipgloss.NewStyle()
-	allList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
-	allList.Filter = fuzzyMatchFilter
-
-	historyList := list.New(historyItems, historyItemDelegate{}, 0, 0)
-	historyList.SetShowTitle(false)
-	historyList.SetShowFilter(false)
-	historyList.SetShowStatusBar(false)
-	historyList.SetShowHelp(false)
-	historyList.SetShowPagination(false)
-	historyList.FilterInput.Prompt = "Filtering: "
-	historyList.FilterInput.PromptStyle = lipgloss.NewStyle()
-	historyList.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
-	historyList.Filter = fuzzyMatchFilter
-
+	allList := newList(allTestItems, testCaseItemDelegate{})
+	historyList := newList(historyItems, historyItemDelegate{})
 	return model{
 		allList:               allList,
 		historyList:           historyList,
@@ -101,6 +81,19 @@ func newModel(allTestItems, historyItems []list.Item) model {
 		tmpTarget:             nil,
 		retTarget:             nil,
 	}
+}
+
+func newList(items []list.Item, delegate list.ItemDelegate) list.Model {
+	l := list.New(items, delegate, 0, 0)
+	l.SetShowTitle(false)
+	l.SetShowFilter(false)
+	l.SetShowStatusBar(false)
+	l.SetShowHelp(false)
+	l.SetShowPagination(false)
+	l.FilterInput.Prompt = "Filtering: "
+	l.FilterInput.PromptStyle = lipgloss.NewStyle()
+	l.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
+	return l
 }
 
 func (m *model) setSize(w, h int) {
