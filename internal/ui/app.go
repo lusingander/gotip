@@ -67,13 +67,13 @@ type model struct {
 	retTarget             *tip.Target
 }
 
-func newModel(allTestItems, historyItems []list.Item) model {
+func newModel(allTestItems, historyItems []list.Item, defaultView view) model {
 	allList := newList(allTestItems, testCaseItemDelegate{})
 	historyList := newList(historyItems, historyItemDelegate{})
 	return model{
 		allList:               allList,
 		historyList:           historyList,
-		currentView:           allView,
+		currentView:           defaultView,
 		matchFilterType:       fuzzyMatchFilterType,
 		statusMsgType:         noneStatusMsgType,
 		allBeforeSelected:     -1,
@@ -272,10 +272,14 @@ func (m model) View() string {
 	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
 }
 
-func Start(tests map[string][]*tip.TestFunction, histories *tip.Histories, conf *tip.Config) (*tip.Target, error) {
+func Start(tests map[string][]*tip.TestFunction, histories *tip.Histories, conf *tip.Config, defaultViewStr string) (*tip.Target, error) {
 	allTestItems := toTestCaseItems(tests)
 	historyItems := toHistoryItems(histories, conf.History.DateFormat)
-	m := newModel(allTestItems, historyItems)
+	defaultView := allView
+	if defaultViewStr == "history" {
+		defaultView = historyView
+	}
+	m := newModel(allTestItems, historyItems, defaultView)
 	p := tea.NewProgram(
 		m,
 		tea.WithAltScreen(),

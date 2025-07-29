@@ -5,11 +5,16 @@ import (
 	"os"
 	"slices"
 
+	"github.com/jessevdk/go-flags"
 	"github.com/lusingander/gotip/internal/command"
 	"github.com/lusingander/gotip/internal/parse"
 	"github.com/lusingander/gotip/internal/tip"
 	"github.com/lusingander/gotip/internal/ui"
 )
+
+type options struct {
+	View string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
+}
 
 func main() {
 	code, err := run(os.Args)
@@ -19,16 +24,30 @@ func main() {
 	os.Exit(code)
 }
 
-func parseArgs(args []string) ([]string, []string) {
-	i := slices.Index(args, "--")
-	if i == -1 {
-		return args, nil
+func parseArgs(args []string) (*options, []string, error) {
+	var cliArgs, testArgs []string
+	if i := slices.Index(args, "--"); i != -1 {
+		cliArgs = args[:i]
+		testArgs = args[i+1:]
+	} else {
+		cliArgs = args
+		testArgs = nil
 	}
-	return args[:i], args[i+1:]
+	var opts options
+	if _, err := flags.ParseArgs(&opts, cliArgs); err != nil {
+		return nil, nil, err
+	}
+	return &opts, testArgs, nil
 }
 
 func run(args []string) (int, error) {
-	_, testArgs := parseArgs(args)
+	opt, testArgs, err := parseArgs(args)
+	if err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			return 0, nil
+		}
+		return 1, nil
+	}
 	conf, err := tip.LoadConfig()
 	if err != nil {
 		return 1, err
@@ -43,7 +62,7 @@ func run(args []string) (int, error) {
 		return 1, err
 	}
 
-	target, err := ui.Start(tests, histories, conf)
+	target, err := ui.Start(tests, histories, conf, opt.View)
 	if err != nil {
 		return 1, err
 	}
