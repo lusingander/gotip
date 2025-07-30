@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"slices"
 
@@ -21,7 +20,7 @@ type options struct {
 func main() {
 	code, err := run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 	os.Exit(code)
 }
@@ -42,10 +41,6 @@ func parseArgs(args []string) (*options, []string, error) {
 	return &opts, testArgs, nil
 }
 
-func printVersion() {
-	fmt.Printf("gotip %s\n", tip.AppVersion)
-}
-
 func run(args []string) (int, error) {
 	opt, testArgs, err := parseArgs(args)
 	if err != nil {
@@ -55,7 +50,7 @@ func run(args []string) (int, error) {
 		return 1, nil
 	}
 	if opt.Version {
-		printVersion()
+		fmt.Fprintf(os.Stderr, "gotip %s\n", tip.AppVersion)
 		return 0, nil
 	}
 	conf, err := tip.LoadConfig()
