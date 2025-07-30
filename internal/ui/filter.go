@@ -13,6 +13,17 @@ const (
 	exactMatchFilterType
 )
 
+func matchFilterTypeFromStr(s string) matchFilterType {
+	switch s {
+	case "fuzzy":
+		return fuzzyMatchFilterType
+	case "exact":
+		return exactMatchFilterType
+	default:
+		panic("unknown match filter type: " + s)
+	}
+}
+
 func fuzzyMatchFilter(term string, targets []string) []list.Rank {
 	ranks := list.DefaultFilter(term, targets)
 	return convertRanks(ranks, targets)

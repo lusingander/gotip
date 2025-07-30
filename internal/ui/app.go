@@ -45,6 +45,17 @@ const (
 	historyView
 )
 
+func viewFromStr(s string) view {
+	switch s {
+	case "all":
+		return allView
+	case "history":
+		return historyView
+	default:
+		panic("unknown view type: " + s)
+	}
+}
+
 type statusMsgType int
 
 const (
@@ -287,14 +298,8 @@ func Start(
 ) (*tip.Target, error) {
 	allTestItems := toTestCaseItems(tests)
 	historyItems := toHistoryItems(histories, conf.History.DateFormat)
-	defaultView := allView
-	if defaultViewStr == "history" {
-		defaultView = historyView
-	}
-	defaultFilterType := fuzzyMatchFilterType
-	if defaultFilterTypeStr == "exact" {
-		defaultFilterType = exactMatchFilterType
-	}
+	defaultView := viewFromStr(defaultViewStr)
+	defaultFilterType := matchFilterTypeFromStr(defaultFilterTypeStr)
 	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType)
 	p := tea.NewProgram(
 		m,
