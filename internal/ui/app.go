@@ -93,6 +93,7 @@ func newList(items []list.Item, delegate list.ItemDelegate) list.Model {
 	l.FilterInput.Prompt = "Filtering: "
 	l.FilterInput.PromptStyle = lipgloss.NewStyle()
 	l.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
+	l.Filter = fuzzyMatchFilter
 	return l
 }
 
