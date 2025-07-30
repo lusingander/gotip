@@ -62,6 +62,21 @@ The history data is stored under `.local/state/gotip/history/`.
 
 <img src="./img/history.gif" width=600>
 
+### Options
+
+```
+Usage:
+  gotip [OPTIONS]
+
+Application Options:
+  -v, --view=[all|history]   Default view (default: all)
+  -f, --filter=[fuzzy|exact] Default filter type (default: fuzzy)
+  -V, --version              Print version
+
+Help Options:
+  -h, --help                 Show this help message
+```
+
 ### Config
 
 You can configure gotip by placing a `gotip.toml` file in the current directory.
@@ -119,7 +134,7 @@ command = ["go", "test", "-run", "${name}", "${package}"]
 | <kbd>Enter</kbd>            | Confirm filter (in filtering mode)         |
 | <kbd>Esc</kbd>              | Clear filtering mode                       |
 | <kbd>Ctrl-x</kbd>           | Toggle filtering type                      |
-| <kbd>Tab</kbd>.             | Switch view                                |
+| <kbd>Tab</kbd>              | Switch view                                |
 
 ## Planned features
 
