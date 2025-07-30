@@ -67,14 +67,14 @@ type model struct {
 	retTarget             *tip.Target
 }
 
-func newModel(allTestItems, historyItems []list.Item, defaultView view) model {
-	allList := newList(allTestItems, testCaseItemDelegate{})
-	historyList := newList(historyItems, historyItemDelegate{})
+func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultFilterType matchFilterType) model {
+	allList := newList(allTestItems, testCaseItemDelegate{}, defaultFilterType)
+	historyList := newList(historyItems, historyItemDelegate{}, defaultFilterType)
 	return model{
 		allList:               allList,
 		historyList:           historyList,
 		currentView:           defaultView,
-		matchFilterType:       fuzzyMatchFilterType,
+		matchFilterType:       defaultFilterType,
 		statusMsgType:         noneStatusMsgType,
 		allBeforeSelected:     -1,
 		historyBeforeSelected: -1,
@@ -83,7 +83,7 @@ func newModel(allTestItems, historyItems []list.Item, defaultView view) model {
 	}
 }
 
-func newList(items []list.Item, delegate list.ItemDelegate) list.Model {
+func newList(items []list.Item, delegate list.ItemDelegate, defaultFilterType matchFilterType) list.Model {
 	l := list.New(items, delegate, 0, 0)
 	l.SetShowTitle(false)
 	l.SetShowFilter(false)
@@ -93,7 +93,12 @@ func newList(items []list.Item, delegate list.ItemDelegate) list.Model {
 	l.FilterInput.Prompt = "Filtering: "
 	l.FilterInput.PromptStyle = lipgloss.NewStyle()
 	l.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
-	l.Filter = fuzzyMatchFilter
+	switch defaultFilterType {
+	case fuzzyMatchFilterType:
+		l.Filter = fuzzyMatchFilter
+	case exactMatchFilterType:
+		l.Filter = exactMatchFilter
+	}
 	return l
 }
 
@@ -273,14 +278,24 @@ func (m model) View() string {
 	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
 }
 
-func Start(tests map[string][]*tip.TestFunction, histories *tip.Histories, conf *tip.Config, defaultViewStr string) (*tip.Target, error) {
+func Start(
+	tests map[string][]*tip.TestFunction,
+	histories *tip.Histories,
+	conf *tip.Config,
+	defaultViewStr string,
+	defaultFilterTypeStr string,
+) (*tip.Target, error) {
 	allTestItems := toTestCaseItems(tests)
 	historyItems := toHistoryItems(histories, conf.History.DateFormat)
 	defaultView := allView
 	if defaultViewStr == "history" {
 		defaultView = historyView
 	}
-	m := newModel(allTestItems, historyItems, defaultView)
+	defaultFilterType := fuzzyMatchFilterType
+	if defaultFilterTypeStr == "exact" {
+		defaultFilterType = exactMatchFilterType
+	}
+	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType)
 	p := tea.NewProgram(
 		m,
 		tea.WithAltScreen(),

@@ -14,6 +14,7 @@ import (
 
 type options struct {
 	View    string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
+	Filter  string `short:"f" long:"filter" description:"Default filter type" choice:"fuzzy" choice:"exact" default:"fuzzy"`
 	Version bool   `short:"V" long:"version" description:"Print version"`
 }
 
@@ -67,7 +68,7 @@ func run(args []string) (int, error) {
 		return 1, err
 	}
 
-	target, err := ui.Start(tests, histories, conf, opt.View)
+	target, err := ui.Start(tests, histories, conf, opt.View, opt.Filter)
 	if err != nil {
 		return 1, err
 	}
