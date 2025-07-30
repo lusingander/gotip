@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"slices"
@@ -13,7 +14,8 @@ import (
 )
 
 type options struct {
-	View string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
+	View    string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
+	Version bool   `short:"V" long:"version" description:"Print version"`
 }
 
 func main() {
@@ -40,6 +42,10 @@ func parseArgs(args []string) (*options, []string, error) {
 	return &opts, testArgs, nil
 }
 
+func printVersion() {
+	fmt.Printf("gotip %s\n", tip.AppVersion)
+}
+
 func run(args []string) (int, error) {
 	opt, testArgs, err := parseArgs(args)
 	if err != nil {
@@ -47,6 +53,10 @@ func run(args []string) (int, error) {
 			return 0, nil
 		}
 		return 1, nil
+	}
+	if opt.Version {
+		printVersion()
+		return 0, nil
 	}
 	conf, err := tip.LoadConfig()
 	if err != nil {
