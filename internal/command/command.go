@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/gotip/internal/tip"
@@ -68,8 +69,16 @@ func buildTestExecCommand(target *tip.Target, nameRegex string, extraArgs []stri
 }
 
 func testNameToTestRunRegex(pattern string, isPrefix bool) string {
-	if isPrefix {
-		return fmt.Sprintf("^%s", pattern)
+	segments := strings.Split(pattern, "/")
+	for i, segment := range segments {
+		if segment == "" {
+			continue
+		}
+		if isPrefix && i == len(segments)-1 {
+			segments[i] = "^" + segment
+		} else {
+			segments[i] = "^" + segment + "$"
+		}
 	}
-	return fmt.Sprintf("^%s$", pattern)
+	return strings.Join(segments, "/")
 }
