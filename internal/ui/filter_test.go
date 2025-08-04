@@ -17,6 +17,7 @@ func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 		{"abcdeあいうえおxyzわをん", "eあyん", []int{4, 5, 11, 15}},
 		{"abcdeあいうえおxyzわをん", "fgh", nil},
 		{"abcdeあいうえおxyzわをん", "かきくけこ", nil},
+		{"axxbxxcxxabc", "abc", []int{0, 3, 6}},
 	}
 
 	for _, tt := range tests {
@@ -62,6 +63,7 @@ func TestExactMatchFilter_MatchedIndexes(t *testing.T) {
 		{"abcdeあいうえおxyzわをん", "eあyん", nil},
 		{"abcdeあいうえおxyzわをん", "fgh", nil},
 		{"abcdeあいうえおxyzわをん", "かきくけこ", nil},
+		{"axxbxxcxxabc", "abc", []int{9, 10, 11}},
 	}
 
 	for _, tt := range tests {
