@@ -3,25 +3,25 @@ package ui
 import "testing"
 
 func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
-	target := "abcdeあいうえおxyzわをん"
 	tests := []struct {
-		term string
-		want []int
+		target string
+		term   string
+		want   []int
 	}{
-		{"abc", []int{0, 1, 2}},
-		{"deあい", []int{3, 4, 5, 6}},
-		{"うえお", []int{7, 8, 9}},
-		{"xyz", []int{10, 11, 12}},
-		{"adz", []int{0, 3, 12}},
-		{"いうお", []int{6, 7, 9}},
-		{"eあyん", []int{4, 5, 11, 15}},
-		{"fgh", nil},
-		{"かきくけこ", nil},
+		{"abcdeあいうえおxyzわをん", "abc", []int{0, 1, 2}},
+		{"abcdeあいうえおxyzわをん", "deあい", []int{3, 4, 5, 6}},
+		{"abcdeあいうえおxyzわをん", "うえお", []int{7, 8, 9}},
+		{"abcdeあいうえおxyzわをん", "xyz", []int{10, 11, 12}},
+		{"abcdeあいうえおxyzわをん", "adz", []int{0, 3, 12}},
+		{"abcdeあいうえおxyzわをん", "いうお", []int{6, 7, 9}},
+		{"abcdeあいうえおxyzわをん", "eあyん", []int{4, 5, 11, 15}},
+		{"abcdeあいうえおxyzわをん", "fgh", nil},
+		{"abcdeあいうえおxyzわをん", "かきくけこ", nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.term, func(t *testing.T) {
-			targets := []string{target}
+			targets := []string{tt.target}
 			ranks := fuzzyMatchFilter(tt.term, targets)
 			if tt.want == nil {
 				if len(ranks) != 0 {
@@ -48,25 +48,25 @@ func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 }
 
 func TestExactMatchFilter_MatchedIndexes(t *testing.T) {
-	target := "abcdeあいうえおxyzわをん"
 	tests := []struct {
-		term string
-		want []int
+		target string
+		term   string
+		want   []int
 	}{
-		{"abc", []int{0, 1, 2}},
-		{"deあい", []int{3, 4, 5, 6}},
-		{"うえお", []int{7, 8, 9}},
-		{"xyz", []int{10, 11, 12}},
-		{"adz", nil},
-		{"いうお", nil},
-		{"eあyん", nil},
-		{"fgh", nil},
-		{"かきくけこ", nil},
+		{"abcdeあいうえおxyzわをん", "abc", []int{0, 1, 2}},
+		{"abcdeあいうえおxyzわをん", "deあい", []int{3, 4, 5, 6}},
+		{"abcdeあいうえおxyzわをん", "うえお", []int{7, 8, 9}},
+		{"abcdeあいうえおxyzわをん", "xyz", []int{10, 11, 12}},
+		{"abcdeあいうえおxyzわをん", "adz", nil},
+		{"abcdeあいうえおxyzわをん", "いうお", nil},
+		{"abcdeあいうえおxyzわをん", "eあyん", nil},
+		{"abcdeあいうえおxyzわをん", "fgh", nil},
+		{"abcdeあいうえおxyzわをん", "かきくけこ", nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.term, func(t *testing.T) {
-			targets := []string{target}
+			targets := []string{tt.target}
 			ranks := exactMatchFilter(tt.term, targets)
 			if tt.want == nil {
 				if len(ranks) != 0 {
