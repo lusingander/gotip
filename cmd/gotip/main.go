@@ -54,7 +54,7 @@ func run(args []string) (int, error) {
 		fmt.Fprintf(os.Stderr, "gotip %s\n", tip.AppVersion)
 		return 0, nil
 	}
-	conf, err := tip.LoadConfig()
+	conf, err := tip.LoadConfig(".")
 	if err != nil {
 		return 1, err
 	}
