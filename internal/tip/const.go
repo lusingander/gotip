@@ -1,6 +1,6 @@
 package tip
 
-const AppVersion = "0.4.1"
+const AppVersion = "0.5.0"
 
 const (
 	UnresolvedTestCaseName = "???"
