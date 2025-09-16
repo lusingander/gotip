@@ -79,7 +79,15 @@ Help Options:
 
 ### Config
 
-You can configure gotip by placing a `gotip.toml` file in the current directory.
+gotip supports both global and project-specific configuration.
+
+- Global config
+  - Place your global config at `~/.config/gotip/gotip.toml`. This applies to all projects.
+- Project config
+  - Place a `gotip.toml` file in your current working directory. This applies only to the current project.
+
+If both global and project configs exist, they are merged.  
+For overlapping keys, the project config takes precedence.
 
 The format is as follows:
 
