@@ -15,6 +15,7 @@ import (
 type options struct {
 	View    string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
 	Filter  string `short:"f" long:"filter" description:"Default filter type" choice:"fuzzy" choice:"exact" default:"fuzzy"`
+	Rerun   bool   `short:"r" long:"rerun" description:"Rerun the last test without showing the UI"`
 	Version bool   `short:"V" long:"version" description:"Print version"`
 }
 
@@ -50,10 +51,12 @@ func run(args []string) (int, error) {
 		}
 		return 1, nil
 	}
+
 	if opt.Version {
 		fmt.Fprintf(os.Stderr, "gotip %s\n", tip.AppVersion)
 		return 0, nil
 	}
+
 	conf, err := tip.LoadConfig(".")
 	if err != nil {
 		return 1, err
@@ -61,6 +64,18 @@ func run(args []string) (int, error) {
 	histories, err := tip.LoadHistories(".")
 	if err != nil {
 		return 1, err
+	}
+
+	if opt.Rerun {
+		if len(histories.Histories) == 0 {
+			fmt.Fprintln(os.Stderr, "No test history found.")
+			return 1, nil
+		}
+		code, err := command.Test(histories.Histories[0].ToTarget(), testArgs, conf)
+		if err != nil {
+			return 1, err
+		}
+		return code, nil
 	}
 
 	tests, err := parse.ProcessFilesRecursively(".")

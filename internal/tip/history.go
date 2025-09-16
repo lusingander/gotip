@@ -61,6 +61,15 @@ func (h *History) referToSameHistory(other *History) bool {
 		h.IsPrefix == other.IsPrefix
 }
 
+func (h *History) ToTarget() *Target {
+	return &Target{
+		Path:            h.Path,
+		PackageName:     h.PackageName,
+		TestNamePattern: h.TestNamePattern,
+		IsPrefix:        h.IsPrefix,
+	}
+}
+
 func LoadHistories(projectDir string) (*Histories, error) {
 	filePath, err := projectHistoriesFilePath(projectDir)
 	if err != nil {
