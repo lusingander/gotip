@@ -62,6 +62,16 @@ The history data is stored under `.local/state/gotip/history/`.
 
 <img src="./img/history.gif" width=600>
 
+### Rerunning the last test
+
+You can rerun the last executed test without showing the UI by using the `--rerun` option:
+
+```
+gotip --rerun
+```
+
+This will immediately execute the most recent test from your history.
+
 ### Options
 
 ```
@@ -71,6 +81,7 @@ Usage:
 Application Options:
   -v, --view=[all|history]   Default view (default: all)
   -f, --filter=[fuzzy|exact] Default filter type (default: fuzzy)
+  -r, --rerun                Rerun the last test without showing the UI
   -V, --version              Print version
 
 Help Options:
