@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"regexp"
 	"strings"
 
 	"github.com/boyter/gocodewalker"
@@ -17,20 +16,21 @@ var defaultIgnoreDirs = []string{
 	"testdata",
 }
 
-var targetFilenameRegex = regexp.MustCompile(`_test\.go$`)
-
 func ProcessFilesRecursively(rootDir string) (map[string][]*tip.TestFunction, error) {
 	fileListQueue := make(chan *gocodewalker.File, 1)
 
 	fileWalker := gocodewalker.NewFileWalker(rootDir, fileListQueue)
 	fileWalker.AllowListExtensions = append(fileWalker.AllowListExtensions, "go")
-	fileWalker.IncludeFilenameRegex = append(fileWalker.IncludeFilenameRegex, targetFilenameRegex)
 	fileWalker.ExcludeDirectory = append(fileWalker.ExcludeDirectory, defaultIgnoreDirs...)
 
 	go fileWalker.Start()
 
 	tests := make(map[string][]*tip.TestFunction)
 	for f := range fileListQueue {
+		// fileWalker.IncludeFilenameRegex should not be used to select _test.go files as it seems to override ignore settings
+		if !strings.HasSuffix(f.Location, "_test.go") {
+			continue
+		}
 		testFunctions, err := processFile(f.Location)
 		if err != nil {
 			return nil, fmt.Errorf("error processing file %s: %w", f.Location, err)
