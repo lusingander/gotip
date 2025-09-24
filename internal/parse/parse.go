@@ -12,7 +12,7 @@ import (
 	"github.com/lusingander/gotip/internal/tip"
 )
 
-var ignore = []string{
+var defaultIgnoreDirs = []string{
 	"vendor",
 	"testdata",
 }
@@ -25,7 +25,7 @@ func ProcessFilesRecursively(rootDir string) (map[string][]*tip.TestFunction, er
 	fileWalker := gocodewalker.NewFileWalker(rootDir, fileListQueue)
 	fileWalker.AllowListExtensions = append(fileWalker.AllowListExtensions, "go")
 	fileWalker.IncludeFilenameRegex = append(fileWalker.IncludeFilenameRegex, targetFilenameRegex)
-	fileWalker.ExcludeDirectory = append(fileWalker.ExcludeDirectory, ignore...)
+	fileWalker.ExcludeDirectory = append(fileWalker.ExcludeDirectory, defaultIgnoreDirs...)
 
 	go fileWalker.Start()
 
