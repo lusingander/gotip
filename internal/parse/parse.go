@@ -5,11 +5,10 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/fs"
-	"path/filepath"
-	"slices"
+	"regexp"
 	"strings"
 
+	"github.com/boyter/gocodewalker"
 	"github.com/lusingander/gotip/internal/tip"
 )
 
@@ -18,25 +17,27 @@ var ignore = []string{
 	"testdata",
 }
 
+var targetFilenameRegex = regexp.MustCompile(`_test\.go$`)
+
 func ProcessFilesRecursively(rootDir string) (map[string][]*tip.TestFunction, error) {
+	fileListQueue := make(chan *gocodewalker.File, 1)
+
+	fileWalker := gocodewalker.NewFileWalker(rootDir, fileListQueue)
+	fileWalker.AllowListExtensions = append(fileWalker.AllowListExtensions, "go")
+	fileWalker.IncludeFilenameRegex = append(fileWalker.IncludeFilenameRegex, targetFilenameRegex)
+	fileWalker.ExcludeDirectory = append(fileWalker.ExcludeDirectory, ignore...)
+
+	go fileWalker.Start()
+
 	tests := make(map[string][]*tip.TestFunction)
-	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() && slices.Contains(ignore, d.Name()) {
-			return filepath.SkipDir
-		}
-		if err != nil || !strings.HasSuffix(path, "_test.go") {
-			return nil
-		}
-		testFunctions, err := processFile(path)
+	for f := range fileListQueue {
+		testFunctions, err := processFile(f.Location)
 		if err != nil {
-			return fmt.Errorf("error processing file %s: %w", path, err)
+			return nil, fmt.Errorf("error processing file %s: %w", f.Location, err)
 		}
-		tests[path] = testFunctions
-		return nil
-	})
-	if err != nil {
-		return nil, err
+		tests[f.Location] = testFunctions
 	}
+
 	return tests, nil
 }
 
