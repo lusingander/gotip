@@ -81,6 +81,7 @@ Usage:
 Application Options:
   -v, --view=[all|history]   Default view (default: all)
   -f, --filter=[fuzzy|exact] Default filter type (default: fuzzy)
+  -s, --skip-subtests        Skip subtest detection
   -r, --rerun                Rerun the last test without showing the UI
   -V, --version              Print version
 
