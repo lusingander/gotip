@@ -23,3 +23,16 @@ jobs:
       run: go build -v ./...
     - name: Test
       run: gotestsum --format testname -- -v ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: './go.mod'
+    - name: Install staticcheck
+      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+    - name: Run staticcheck
+      run: staticcheck ./...
