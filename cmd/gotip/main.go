@@ -13,10 +13,11 @@ import (
 )
 
 type options struct {
-	View    string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
-	Filter  string `short:"f" long:"filter" description:"Default filter type" choice:"fuzzy" choice:"exact" default:"fuzzy"`
-	Rerun   bool   `short:"r" long:"rerun" description:"Rerun the last test without showing the UI"`
-	Version bool   `short:"V" long:"version" description:"Print version"`
+	View         string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
+	Filter       string `short:"f" long:"filter" description:"Default filter type" choice:"fuzzy" choice:"exact" default:"fuzzy"`
+	SkipSubtests bool   `short:"s" long:"skip-subtests" description:"Skip subtest detection"`
+	Rerun        bool   `short:"r" long:"rerun" description:"Rerun the last test without showing the UI"`
+	Version      bool   `short:"V" long:"version" description:"Print version"`
 }
 
 func main() {
@@ -78,7 +79,7 @@ func run(args []string) (int, error) {
 		return code, nil
 	}
 
-	tests, err := parse.ProcessFilesRecursively(".")
+	tests, err := parse.ProcessFilesRecursively(".", opt.SkipSubtests)
 	if err != nil {
 		return 1, err
 	}

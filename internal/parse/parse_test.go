@@ -7,6 +7,7 @@ import (
 )
 
 func TestProcessFile(t *testing.T) {
+	skipSubtests := false
 	tests := []struct {
 		name     string
 		filePath string
@@ -18,7 +19,7 @@ func TestProcessFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := processFile(tt.filePath)
+			got, err := processFile(tt.filePath, skipSubtests)
 			if err != nil {
 				t.Errorf("ProcessFile(%s) error = %v", tt.filePath, err)
 				return
@@ -132,6 +133,51 @@ func wantTestC() []*tip.TestFunction {
 			},
 		},
 	}
+}
+
+func TestProcessFile_skipSubtests(t *testing.T) {
+	skipSubtests := true
+	tests := []struct {
+		name     string
+		filePath string
+		want     []*tip.TestFunction
+	}{
+		{"a", "testdata/foo/a_test.go", wantSkipSubtestsTestA()},
+		{"b", "testdata/foo/b_test.go", wantSkipSubtestsTestB()},
+		{"c", "testdata/bar/c_test.go", wantSkipSubtestsTestC()},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := processFile(tt.filePath, skipSubtests)
+			if err != nil {
+				t.Errorf("ProcessFile(%s) error = %v", tt.filePath, err)
+				return
+			}
+			assertEqualTests(t, got, tt.want)
+		})
+	}
+}
+
+func wantSkipSubtestsTestA() []*tip.TestFunction {
+	return []*tip.TestFunction{
+		{Name: "TestA1", Subs: []*tip.SubTest{}},
+		{Name: "TestA2_1", Subs: []*tip.SubTest{}},
+		{Name: "TestA2_2", Subs: []*tip.SubTest{}},
+		{Name: "TestA2_3", Subs: []*tip.SubTest{}},
+		{Name: "TestA2_4", Subs: []*tip.SubTest{}},
+		{Name: "TestA2_5", Subs: []*tip.SubTest{}},
+		{Name: "TestA3", Subs: []*tip.SubTest{}},
+		{Name: "TestA4", Subs: []*tip.SubTest{}},
+		{Name: "TestA5", Subs: []*tip.SubTest{}},
+	}
+}
+
+func wantSkipSubtestsTestB() []*tip.TestFunction {
+	return []*tip.TestFunction{{Name: "TestB1", Subs: []*tip.SubTest{}}}
+}
+
+func wantSkipSubtestsTestC() []*tip.TestFunction {
+	return []*tip.TestFunction{{Name: "TestC1", Subs: []*tip.SubTest{}}}
 }
 
 func assertEqualTests(t *testing.T, got, want []*tip.TestFunction) {

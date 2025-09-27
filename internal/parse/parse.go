@@ -16,7 +16,7 @@ var defaultIgnoreDirs = []string{
 	"testdata",
 }
 
-func ProcessFilesRecursively(rootDir string) (map[string][]*tip.TestFunction, error) {
+func ProcessFilesRecursively(rootDir string, skipSubtests bool) (map[string][]*tip.TestFunction, error) {
 	fileListQueue := make(chan *gocodewalker.File, 1)
 
 	fileWalker := gocodewalker.NewFileWalker(rootDir, fileListQueue)
@@ -31,7 +31,7 @@ func ProcessFilesRecursively(rootDir string) (map[string][]*tip.TestFunction, er
 		if !strings.HasSuffix(f.Location, "_test.go") {
 			continue
 		}
-		testFunctions, err := processFile(f.Location)
+		testFunctions, err := processFile(f.Location, skipSubtests)
 		if err != nil {
 			return nil, fmt.Errorf("error processing file %s: %w", f.Location, err)
 		}
@@ -41,7 +41,7 @@ func ProcessFilesRecursively(rootDir string) (map[string][]*tip.TestFunction, er
 	return tests, nil
 }
 
-func processFile(path string) ([]*tip.TestFunction, error) {
+func processFile(path string, skipSubtests bool) ([]*tip.TestFunction, error) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, path, nil, 0)
 	if err != nil {
@@ -53,12 +53,19 @@ func processFile(path string) ([]*tip.TestFunction, error) {
 		if !ok || !strings.HasPrefix(fn.Name.Name, "Test") {
 			continue
 		}
-		testFunctions = append(testFunctions, processTestFunction(fn))
+		testFunctions = append(testFunctions, processTestFunction(fn, skipSubtests))
 	}
 	return testFunctions, nil
 }
 
-func processTestFunction(fn *ast.FuncDecl) *tip.TestFunction {
+func processTestFunction(fn *ast.FuncDecl, skipSubtests bool) *tip.TestFunction {
+	if skipSubtests {
+		return &tip.TestFunction{
+			Name: fn.Name.Name,
+			Subs: []*tip.SubTest{},
+		}
+	}
+
 	unresolvedSubTests := findSubTests(fn.Body.List)
 
 	subs := make([]*tip.SubTest, 0)
