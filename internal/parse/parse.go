@@ -17,7 +17,7 @@ var defaultIgnoreDirs = []string{
 }
 
 func ProcessFilesRecursively(rootDir string, skipSubtests bool) (map[string][]*tip.TestFunction, error) {
-	fileListQueue := make(chan *gocodewalker.File, 1)
+	fileListQueue := make(chan *gocodewalker.File, 100)
 
 	fileWalker := gocodewalker.NewFileWalker(rootDir, fileListQueue)
 	fileWalker.AllowListExtensions = append(fileWalker.AllowListExtensions, "go")
