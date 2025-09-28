@@ -54,7 +54,7 @@ If subtest names could not be automatically discovered, gotip defaults to select
 
 ### Using test history
 
-Press <kbd>Tab</kbd> to switch to History view.
+Press <kbd>Tab</kbd> to switch to History view, or launch directly with the `--view=history` option.
 
 In this view, you can select and run tests from your previous execution history, just like in the regular view.
 
