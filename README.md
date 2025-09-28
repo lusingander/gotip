@@ -58,7 +58,7 @@ Press <kbd>Tab</kbd> to switch to History view, or launch directly with the `--v
 
 In this view, you can select and run tests from your previous execution history, just like in the regular view.
 
-The history data is stored under `.local/state/gotip/history/`.
+The history data is stored under `~/.local/state/gotip/history/`.
 
 <img src="./img/history.gif" width=600>
 
