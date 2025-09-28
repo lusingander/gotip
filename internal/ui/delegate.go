@@ -156,7 +156,7 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 	)
 
 	i := item.(*historyItem)
-	title = i.name
+	title = i.nameForView
 	desc = i.path
 	runAt = i.runAt
 

@@ -63,6 +63,7 @@ func (i *testCaseItem) FilterValue() string {
 type historyItem struct {
 	path         string
 	name         string
+	nameForView  string // name adjusted for view (e.g., with asterisk for prefix)
 	isUnresolved bool
 	runAt        string
 }
@@ -72,9 +73,14 @@ var _ list.Item = (*historyItem)(nil)
 func toHistoryItems(histories *tip.Histories, dateFormat string) []list.Item {
 	items := make([]list.Item, 0)
 	for _, h := range histories.Histories {
+		nameForView := h.TestNamePattern
+		if h.IsPrefix {
+			nameForView += "*"
+		}
 		item := &historyItem{
 			path:         h.Path,
 			name:         h.TestNamePattern,
+			nameForView:  nameForView,
 			isUnresolved: h.IsPrefix,
 			runAt:        h.RunAt.Format(dateFormat),
 		}
@@ -84,5 +90,5 @@ func toHistoryItems(histories *tip.Histories, dateFormat string) []list.Item {
 }
 
 func (i *historyItem) FilterValue() string {
-	return i.name
+	return i.nameForView
 }
