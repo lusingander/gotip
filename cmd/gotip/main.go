@@ -79,7 +79,7 @@ func run(args []string) (int, error) {
 		return code, nil
 	}
 
-	tests, err := parse.ProcessFilesRecursively(".", opt.SkipSubtests)
+	tests, err := parse.ProcessFilesRecursively(".", conf.Ignore, opt.SkipSubtests)
 	if err != nil {
 		return 1, err
 	}

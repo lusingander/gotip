@@ -16,12 +16,13 @@ var defaultIgnoreDirs = []string{
 	"testdata",
 }
 
-func ProcessFilesRecursively(rootDir string, skipSubtests bool) (map[string][]*tip.TestFunction, error) {
+func ProcessFilesRecursively(rootDir string, ignore []string, skipSubtests bool) (map[string][]*tip.TestFunction, error) {
 	fileListQueue := make(chan *gocodewalker.File, 100)
 
 	fileWalker := gocodewalker.NewFileWalker(rootDir, fileListQueue)
 	fileWalker.AllowListExtensions = append(fileWalker.AllowListExtensions, "go")
 	fileWalker.ExcludeDirectory = append(fileWalker.ExcludeDirectory, defaultIgnoreDirs...)
+	fileWalker.CustomIgnorePatterns = append(fileWalker.CustomIgnorePatterns, ignore...)
 
 	go fileWalker.Start()
 

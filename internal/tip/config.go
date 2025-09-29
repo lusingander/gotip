@@ -16,6 +16,7 @@ const (
 
 type Config struct {
 	Command []string      `toml:"command"`
+	Ignore  []string      `toml:"ignore"`
 	History HistoryConfig `toml:"history"`
 }
 
@@ -27,6 +28,7 @@ type HistoryConfig struct {
 func defaultConfig() *Config {
 	return &Config{
 		Command: []string{},
+		Ignore:  []string{},
 		History: HistoryConfig{
 			Limit:      defaultHistoryLimit,
 			DateFormat: defaultDateFormat,

@@ -108,6 +108,10 @@ The format is as follows:
 # If omitted, the default command is used.
 # type: list of strings
 command = []
+# Specify file path patterns to exclude from processing using the .gitignore format.
+# https://git-scm.com/docs/gitignore/en#_pattern_format
+# type: list of strings
+ignore = []
 
 [history]
 # Limits the number of test executions to keep in history.
