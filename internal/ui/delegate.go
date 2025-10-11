@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -64,14 +63,9 @@ func (d testCaseItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 }
 
 func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	var (
-		title, desc  string
-		matchedRunes []int
-	)
-
 	i := item.(*testCaseItem)
-	title = i.name
-	desc = i.path
+	title := i.name
+	desc := i.path
 
 	if m.Width() <= 0 {
 		return
@@ -79,15 +73,7 @@ func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item 
 
 	textwidth := m.Width() - listNormalTitleStyle.GetPaddingLeft() - listNormalTitleStyle.GetPaddingRight()
 	title = ansi.Truncate(title, textwidth, ellipsis)
-
-	var lines []string
-	for i, line := range strings.Split(desc, "\n") {
-		if i >= d.Height()-1 {
-			break
-		}
-		lines = append(lines, ansi.Truncate(line, textwidth, ellipsis))
-	}
-	desc = strings.Join(lines, "\n")
+	desc = ansi.Truncate(desc, textwidth, ellipsis)
 
 	var (
 		isSelected  = index == m.Index()
@@ -95,6 +81,7 @@ func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item 
 		isFiltered  = m.FilterState() == list.Filtering || m.FilterState() == list.FilterApplied
 	)
 
+	var matchedRunes []int
 	if isFiltered && index < len(m.VisibleItems()) {
 		matchedRunes = m.MatchesForItem(index)
 	}
@@ -150,15 +137,10 @@ func (d historyItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 }
 
 func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	var (
-		title, desc, runAt string
-		matchedRunes       []int
-	)
-
 	i := item.(*historyItem)
-	title = i.nameForView
-	desc = i.path
-	runAt = i.runAt
+	title := i.nameForView
+	desc := i.path
+	runAt := i.runAt
 
 	if m.Width() <= 0 {
 		return
@@ -166,15 +148,8 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 
 	textwidth := m.Width() - listNormalTitleStyle.GetPaddingLeft() - listNormalTitleStyle.GetPaddingRight()
 	title = ansi.Truncate(title, textwidth, ellipsis)
-
-	var lines []string
-	for i, line := range strings.Split(desc, "\n") {
-		if i >= d.Height()-1 {
-			break
-		}
-		lines = append(lines, ansi.Truncate(line, textwidth, ellipsis))
-	}
-	desc = strings.Join(lines, "\n")
+	desc = ansi.Truncate(desc, textwidth, ellipsis)
+	runAt = ansi.Truncate(runAt, textwidth, ellipsis)
 
 	var (
 		isSelected  = index == m.Index()
@@ -182,6 +157,7 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 		isFiltered  = m.FilterState() == list.Filtering || m.FilterState() == list.FilterApplied
 	)
 
+	var matchedRunes []int
 	if isFiltered && index < len(m.VisibleItems()) {
 		matchedRunes = m.MatchesForItem(index)
 	}
