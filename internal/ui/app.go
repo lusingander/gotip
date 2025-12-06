@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -16,14 +15,15 @@ var (
 	selectedColor = lipgloss.Color("#00ADD8")
 	cursorColor   = lipgloss.Color("#00ADD8")
 	borderColor   = lipgloss.Color("240")
+
+	helpHeaderColor = lipgloss.Color("#00ADD8")
+	helpKeyColor    = lipgloss.Color("#5DC9E2")
 )
 
 var (
 	selectedLabelStyle = lipgloss.NewStyle().Foreground(selectedColor)
 	selectedNameStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
 	selectedPathStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
-
-	helpHeaderStyle = lipgloss.NewStyle().Foreground(selectedColor)
 
 	headerStyle = lipgloss.NewStyle().
 			Padding(0, 2).
@@ -39,6 +39,11 @@ var (
 			Padding(0, 1).
 			Border(lipgloss.NormalBorder(), true, false, false, false).
 			BorderForeground(borderColor)
+
+	helpHeaderStyle = lipgloss.NewStyle().Foreground(helpHeaderColor)
+
+	helpContentStyle = lipgloss.NewStyle().Padding(0, 2)
+	helpKeyStyle     = lipgloss.NewStyle().Foreground(helpKeyColor).Bold(true)
 )
 
 type view int
@@ -315,9 +320,27 @@ func (m model) helpView() string {
 	headerVersion := helpHeaderStyle.Render("Version: " + tip.AppVersion)
 	header := headerStyle.Width(m.w).Render(headerProgramName + "\n" + headerVersion)
 
-	// todo
-	lines := slices.Repeat([]string{""}, m.h-5)
-	content := strings.Join(lines, "\n")
+	contentHeight := m.h - 5
+	helps := helpItems()
+	keyLines := []string{}
+	for _, h := range helps {
+		keys := make([]string, 0, len(h.keys))
+		for _, k := range h.keys {
+			keys = append(keys, "<"+helpKeyStyle.Render(k)+">")
+		}
+		keyLine := strings.Join(keys, ", ") + " : "
+		keyLines = append(keyLines, keyLine)
+	}
+	descLines := []string{}
+	for _, h := range helps {
+		descLines = append(descLines, h.desc)
+	}
+	lines := lipgloss.JoinHorizontal(lipgloss.Top,
+		lipgloss.JoinVertical(lipgloss.Right, keyLines...),
+		lipgloss.JoinVertical(lipgloss.Left, descLines...),
+	)
+	padLines := strings.Repeat("\n", contentHeight-lipgloss.Height(lines))
+	content := helpContentStyle.Render(lines + padLines)
 
 	footerView := footerDividerStyle.Render(" | ") + footerMsgStyle.Render("Help     ")
 
@@ -327,6 +350,28 @@ func (m model) helpView() string {
 	footer := footerStyle.Width(m.w).Render(footerSpace + footerView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
+}
+
+type helpItem struct {
+	keys []string
+	desc string
+}
+
+func helpItems() []helpItem {
+	return []helpItem{
+		{keys: []string{"Ctrl-c"}, desc: "Quit"},
+		{keys: []string{"Down", "j"}, desc: "Select next item"},
+		{keys: []string{"Up", "k"}, desc: "Select previous item"},
+		{keys: []string{"Right", "l"}, desc: "Select next page"},
+		{keys: []string{"Left", "h"}, desc: "Select previous page"},
+		{keys: []string{"Enter"}, desc: "Run the selected test / Confirm filter (in filtering mode)"},
+		{keys: []string{"Backspace"}, desc: "Select parent test group"},
+		{keys: []string{"/"}, desc: "Enter filtering mode"},
+		{keys: []string{"Esc"}, desc: "Clear filtering mode"},
+		{keys: []string{"Ctrl-x"}, desc: "Toggle filtering type"},
+		{keys: []string{"Tab"}, desc: "Switch view"},
+		{keys: []string{"?"}, desc: "Show help"},
+	}
 }
 
 func Start(
