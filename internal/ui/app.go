@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -21,6 +22,8 @@ var (
 	selectedLabelStyle = lipgloss.NewStyle().Foreground(selectedColor)
 	selectedNameStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
 	selectedPathStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
+
+	helpHeaderStyle = lipgloss.NewStyle().Foreground(selectedColor)
 
 	headerStyle = lipgloss.NewStyle().
 			Padding(0, 2).
@@ -68,6 +71,7 @@ type model struct {
 	allList         list.Model
 	historyList     list.Model
 	currentView     view
+	showHelp        bool
 	matchFilterType matchFilterType
 	statusMsgType   statusMsgType
 	w, h            int
@@ -85,6 +89,7 @@ func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultF
 		allList:               allList,
 		historyList:           historyList,
 		currentView:           defaultView,
+		showHelp:              false,
 		matchFilterType:       defaultFilterType,
 		statusMsgType:         noneStatusMsgType,
 		allBeforeSelected:     -1,
@@ -174,6 +179,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.setSize(msg.Width, msg.Height)
 	case tea.KeyMsg:
+		if msg.String() == "ctrl+c" {
+			// exit
+			return m, tea.Quit
+		}
+
 		// clear status message
 		m.statusMsgType = noneStatusMsgType
 
@@ -181,9 +191,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 
+		if m.showHelp {
+			if msg.String() == "?" || msg.String() == "backspace" || msg.String() == "ctrl+h" {
+				m.showHelp = false
+			}
+			return m, nil
+		}
+
 		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
 		case "enter":
 			m.retTarget = m.tmpTarget
 			return m, tea.Quit
@@ -197,6 +212,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.allList.FilterState() == list.Unfiltered || m.historyList.FilterState() == list.Unfiltered {
 				m.toggleMatchFilter()
 			}
+		case "?":
+			m.showHelp = true
+			return m, nil
 		}
 	}
 
@@ -225,6 +243,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if m.w == 0 || m.h == 0 {
 		return ""
+	}
+	if m.showHelp {
+		return m.helpView()
 	}
 
 	var currentList list.Model
@@ -287,6 +308,25 @@ func (m model) View() string {
 	footer := footerStyle.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex + footerView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
+}
+
+func (m model) helpView() string {
+	headerProgramName := helpHeaderStyle.Render(tip.ProgramName)
+	headerVersion := helpHeaderStyle.Render("Version: " + tip.AppVersion)
+	header := headerStyle.Width(m.w).Render(headerProgramName + "\n" + headerVersion)
+
+	// todo
+	lines := slices.Repeat([]string{""}, m.h-5)
+	content := strings.Join(lines, "\n")
+
+	footerView := footerDividerStyle.Render(" | ") + footerMsgStyle.Render("Help     ")
+
+	footerSpaceWidth := m.w - lipgloss.Width(footerView) - 2 /* padding */
+	footerSpace := strings.Repeat(" ", footerSpaceWidth)
+
+	footer := footerStyle.Width(m.w).Render(footerSpace + footerView)
+
+	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
 }
 
 func Start(
