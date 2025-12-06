@@ -159,6 +159,7 @@ command = ["go", "test", "-run", "${name}", "${package}"]
 | <kbd>Esc</kbd>              | Clear filtering mode                       |
 | <kbd>Ctrl-x</kbd>           | Toggle filtering type                      |
 | <kbd>Tab</kbd>              | Switch view                                |
+| <kbd>?</kbd>                | Show help                                  |
 
 ## Planned features
 
