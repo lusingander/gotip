@@ -324,6 +324,9 @@ func (m model) helpView() string {
 	keyLines := []string{}
 	descLines := []string{}
 	for _, h := range helpItems() {
+		if len(keyLines) >= contentHeight {
+			break
+		}
 		keys := make([]string, 0, len(h.keys))
 		for _, k := range h.keys {
 			keys = append(keys, "<"+helpKeyStyle.Render(k)+">")
