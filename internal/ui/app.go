@@ -173,6 +173,28 @@ func (m *model) updateCurrentSelectedHistoryItem() {
 	}
 }
 
+func (m *model) openHelp() {
+	m.showHelp = true
+	m.helpOffset = 0
+}
+
+func (m *model) closeHelp() {
+	m.showHelp = false
+	m.helpOffset = 0
+}
+
+func (m *model) scrollHelpUp() {
+	if m.helpOffset > 0 {
+		m.helpOffset--
+	}
+}
+
+func (m *model) scrollHelpDown() {
+	if m.helpOffset < len(helpItems())-1 {
+		m.helpOffset++
+	}
+}
+
 var _ tea.Model = (*model)(nil)
 
 func (m model) Init() tea.Cmd {
@@ -201,15 +223,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.showHelp {
 			switch msg.String() {
 			case "up", "k":
-				if m.helpOffset > 0 {
-					m.helpOffset--
-				}
+				m.scrollHelpUp()
 			case "down", "j":
-				if m.helpOffset < len(helpItems())-1 {
-					m.helpOffset++
-				}
+				m.scrollHelpDown()
 			case "?", "backspace", "ctrl+h":
-				m.showHelp = false
+				m.closeHelp()
 			}
 			return m, nil
 		}
@@ -229,8 +247,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.toggleMatchFilter()
 			}
 		case "?":
-			m.showHelp = true
-			m.helpOffset = 0
+			m.openHelp()
 			return m, nil
 		}
 	}
