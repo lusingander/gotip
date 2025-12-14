@@ -335,13 +335,7 @@ func (m model) helpView() string {
 	contentHeight := m.h - 5
 	keyLines := []string{}
 	descLines := []string{}
-	for i, h := range helpItems() {
-		if i < m.helpOffset {
-			continue
-		}
-		if len(keyLines) >= contentHeight {
-			break
-		}
+	for _, h := range helpItems() {
 		keys := make([]string, 0, len(h.keys))
 		for _, k := range h.keys {
 			keys = append(keys, "<"+helpKeyStyle.Render(k)+">")
@@ -350,12 +344,23 @@ func (m model) helpView() string {
 		keyLines = append(keyLines, keyLine)
 		descLines = append(descLines, h.desc)
 	}
-	lines := lipgloss.JoinHorizontal(lipgloss.Top,
+	linesJoined := lipgloss.JoinHorizontal(lipgloss.Top,
 		lipgloss.JoinVertical(lipgloss.Right, keyLines...),
 		lipgloss.JoinVertical(lipgloss.Left, descLines...),
 	)
-	padLines := strings.Repeat("\n", contentHeight-lipgloss.Height(lines))
-	content := helpContentStyle.Render(lines + padLines)
+	lines := []string{}
+	for i, line := range strings.Split(linesJoined, "\n") {
+		if i < m.helpOffset {
+			continue
+		}
+		if len(lines) >= contentHeight {
+			break
+		}
+		lines = append(lines, line)
+	}
+
+	padLines := strings.Repeat("\n", contentHeight-len(lines))
+	content := helpContentStyle.Render(strings.Join(lines, "\n") + padLines)
 
 	footerView := footerDividerStyle.Render(" | ") + footerMsgStyle.Render("Help     ")
 
