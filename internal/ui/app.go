@@ -321,18 +321,15 @@ func (m model) helpView() string {
 	header := headerStyle.Width(m.w).Render(headerProgramName + "\n" + headerVersion)
 
 	contentHeight := m.h - 5
-	helps := helpItems()
 	keyLines := []string{}
-	for _, h := range helps {
+	descLines := []string{}
+	for _, h := range helpItems() {
 		keys := make([]string, 0, len(h.keys))
 		for _, k := range h.keys {
 			keys = append(keys, "<"+helpKeyStyle.Render(k)+">")
 		}
 		keyLine := strings.Join(keys, ", ") + " : "
 		keyLines = append(keyLines, keyLine)
-	}
-	descLines := []string{}
-	for _, h := range helps {
 		descLines = append(descLines, h.desc)
 	}
 	lines := lipgloss.JoinHorizontal(lipgloss.Top,
