@@ -77,6 +77,7 @@ type model struct {
 	historyList     list.Model
 	currentView     view
 	showHelp        bool
+	helpOffset      int
 	matchFilterType matchFilterType
 	statusMsgType   statusMsgType
 	w, h            int
@@ -95,6 +96,7 @@ func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultF
 		historyList:           historyList,
 		currentView:           defaultView,
 		showHelp:              false,
+		helpOffset:            0,
 		matchFilterType:       defaultFilterType,
 		statusMsgType:         noneStatusMsgType,
 		allBeforeSelected:     -1,
@@ -197,7 +199,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.showHelp {
-			if msg.String() == "?" || msg.String() == "backspace" || msg.String() == "ctrl+h" {
+			switch msg.String() {
+			case "up", "k":
+				if m.helpOffset > 0 {
+					m.helpOffset--
+				}
+			case "down", "j":
+				if m.helpOffset < len(helpItems())-1 {
+					m.helpOffset++
+				}
+			case "?", "backspace", "ctrl+h":
 				m.showHelp = false
 			}
 			return m, nil
@@ -219,6 +230,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "?":
 			m.showHelp = true
+			m.helpOffset = 0
 			return m, nil
 		}
 	}
@@ -323,7 +335,10 @@ func (m model) helpView() string {
 	contentHeight := m.h - 5
 	keyLines := []string{}
 	descLines := []string{}
-	for _, h := range helpItems() {
+	for i, h := range helpItems() {
+		if i < m.helpOffset {
+			continue
+		}
 		if len(keyLines) >= contentHeight {
 			break
 		}
