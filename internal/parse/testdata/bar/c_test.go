@@ -2,7 +2,7 @@ package bar
 
 import "testing"
 
-func TestC1(t *testing.T) {
+func TestNestedLiteralSubtests(t *testing.T) {
 	t.Run("test1", func(t *testing.T) {
 		t.Run("subtest1", func(t *testing.T) {
 			a := 1

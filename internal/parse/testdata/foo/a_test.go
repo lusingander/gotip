@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestA1(t *testing.T) {
+func TestSimpleAddition(t *testing.T) {
 	a := 1
 	b := 2
 	got := a + b
@@ -16,7 +16,7 @@ func TestA1(t *testing.T) {
 	}
 }
 
-func TestA2_1(t *testing.T) {
+func TestStructSlicePositionalFields(t *testing.T) {
 	tests := []struct {
 		name string
 		a    int
@@ -38,7 +38,7 @@ func TestA2_1(t *testing.T) {
 	}
 }
 
-func TestA2_2(t *testing.T) {
+func TestStructSliceKeyedFields(t *testing.T) {
 	tests := []struct {
 		name string
 		a    int
@@ -60,7 +60,7 @@ func TestA2_2(t *testing.T) {
 	}
 }
 
-func TestA2_3(t *testing.T) {
+func TestNamedStructSlice(t *testing.T) {
 	type fixture struct {
 		name string
 		a    int
@@ -83,7 +83,7 @@ func TestA2_3(t *testing.T) {
 	}
 }
 
-func TestA2_4(t *testing.T) {
+func TestVarStructSlice(t *testing.T) {
 	var tests = []struct {
 		name string
 		a    int
@@ -104,7 +104,7 @@ func TestA2_4(t *testing.T) {
 	}
 }
 
-func TestA2_5(t *testing.T) {
+func TestNestedStructFieldName(t *testing.T) {
 	type reqParam struct {
 		name string
 		a    int
@@ -128,7 +128,7 @@ func TestA2_5(t *testing.T) {
 	}
 }
 
-func TestA3(t *testing.T) {
+func TestMapKeySubtests(t *testing.T) {
 	tests := map[string]struct {
 		a    int
 		b    int
@@ -148,7 +148,7 @@ func TestA3(t *testing.T) {
 	}
 }
 
-func TestA4(t *testing.T) {
+func TestConcatGeneratedName(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		t.Run("test"+strconv.Itoa(i), func(t *testing.T) {
 			a := i + 1
@@ -162,7 +162,7 @@ func TestA4(t *testing.T) {
 	}
 }
 
-func TestA5(t *testing.T) {
+func TestSprintfGeneratedName(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		t.Run(fmt.Sprintf("test%d", i), func(t *testing.T) {
 			a := i + 1
@@ -176,7 +176,7 @@ func TestA5(t *testing.T) {
 	}
 }
 
-func TestA6(t *testing.T) {
+func TestStringIdentNames(t *testing.T) {
 	name := "test1"
 	t.Run(name, func(t *testing.T) {
 		a := 1

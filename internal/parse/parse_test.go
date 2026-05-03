@@ -32,11 +32,11 @@ func TestProcessFile(t *testing.T) {
 func wantTestA() []*tip.TestFunction {
 	return []*tip.TestFunction{
 		{
-			Name: "TestA1",
+			Name: "TestSimpleAddition",
 			Subs: []*tip.SubTest{},
 		},
 		{
-			Name: "TestA2_1",
+			Name: "TestStructSlicePositionalFields",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Subs: []*tip.SubTest{}},
 				{Name: "test2", Subs: []*tip.SubTest{}},
@@ -44,7 +44,7 @@ func wantTestA() []*tip.TestFunction {
 			},
 		},
 		{
-			Name: "TestA2_2",
+			Name: "TestStructSliceKeyedFields",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Subs: []*tip.SubTest{}},
 				{Name: "test2", Subs: []*tip.SubTest{}},
@@ -52,7 +52,7 @@ func wantTestA() []*tip.TestFunction {
 			},
 		},
 		{
-			Name: "TestA2_3",
+			Name: "TestNamedStructSlice",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Subs: []*tip.SubTest{}},
 				{Name: "test2", Subs: []*tip.SubTest{}},
@@ -60,39 +60,39 @@ func wantTestA() []*tip.TestFunction {
 			},
 		},
 		{
-			Name: "TestA2_4",
+			Name: "TestVarStructSlice",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Subs: []*tip.SubTest{}},
 				{Name: "test2", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
-			Name: "TestA2_5",
+			Name: "TestNestedStructFieldName",
 			Subs: []*tip.SubTest{
 				{Name: "???", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
-			Name: "TestA3",
+			Name: "TestMapKeySubtests",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Subs: []*tip.SubTest{}},
 				{Name: "test2", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
-			Name: "TestA4",
+			Name: "TestConcatGeneratedName",
 			Subs: []*tip.SubTest{
 				{Name: "???", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
-			Name: "TestA5",
+			Name: "TestSprintfGeneratedName",
 			Subs: []*tip.SubTest{
 				{Name: "???", Subs: []*tip.SubTest{}},
 			},
 		},
 		{
-			Name: "TestA6",
+			Name: "TestStringIdentNames",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Subs: []*tip.SubTest{}},
 				{Name: "test2", Subs: []*tip.SubTest{}},
@@ -105,7 +105,7 @@ func wantTestA() []*tip.TestFunction {
 func wantTestB() []*tip.TestFunction {
 	return []*tip.TestFunction{
 		{
-			Name: "TestB1",
+			Name: "TestLiteralSubtestsWithHelper",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Subs: []*tip.SubTest{}},
 				{Name: "test2", Subs: []*tip.SubTest{}},
@@ -117,7 +117,7 @@ func wantTestB() []*tip.TestFunction {
 func wantTestC() []*tip.TestFunction {
 	return []*tip.TestFunction{
 		{
-			Name: "TestC1",
+			Name: "TestNestedLiteralSubtests",
 			Subs: []*tip.SubTest{
 				{
 					Name: "test1",
@@ -169,25 +169,25 @@ func TestProcessFile_skipSubtests(t *testing.T) {
 
 func wantSkipSubtestsTestA() []*tip.TestFunction {
 	return []*tip.TestFunction{
-		{Name: "TestA1", Subs: []*tip.SubTest{}},
-		{Name: "TestA2_1", Subs: []*tip.SubTest{}},
-		{Name: "TestA2_2", Subs: []*tip.SubTest{}},
-		{Name: "TestA2_3", Subs: []*tip.SubTest{}},
-		{Name: "TestA2_4", Subs: []*tip.SubTest{}},
-		{Name: "TestA2_5", Subs: []*tip.SubTest{}},
-		{Name: "TestA3", Subs: []*tip.SubTest{}},
-		{Name: "TestA4", Subs: []*tip.SubTest{}},
-		{Name: "TestA5", Subs: []*tip.SubTest{}},
-		{Name: "TestA6", Subs: []*tip.SubTest{}},
+		{Name: "TestSimpleAddition", Subs: []*tip.SubTest{}},
+		{Name: "TestStructSlicePositionalFields", Subs: []*tip.SubTest{}},
+		{Name: "TestStructSliceKeyedFields", Subs: []*tip.SubTest{}},
+		{Name: "TestNamedStructSlice", Subs: []*tip.SubTest{}},
+		{Name: "TestVarStructSlice", Subs: []*tip.SubTest{}},
+		{Name: "TestNestedStructFieldName", Subs: []*tip.SubTest{}},
+		{Name: "TestMapKeySubtests", Subs: []*tip.SubTest{}},
+		{Name: "TestConcatGeneratedName", Subs: []*tip.SubTest{}},
+		{Name: "TestSprintfGeneratedName", Subs: []*tip.SubTest{}},
+		{Name: "TestStringIdentNames", Subs: []*tip.SubTest{}},
 	}
 }
 
 func wantSkipSubtestsTestB() []*tip.TestFunction {
-	return []*tip.TestFunction{{Name: "TestB1", Subs: []*tip.SubTest{}}}
+	return []*tip.TestFunction{{Name: "TestLiteralSubtestsWithHelper", Subs: []*tip.SubTest{}}}
 }
 
 func wantSkipSubtestsTestC() []*tip.TestFunction {
-	return []*tip.TestFunction{{Name: "TestC1", Subs: []*tip.SubTest{}}}
+	return []*tip.TestFunction{{Name: "TestNestedLiteralSubtests", Subs: []*tip.SubTest{}}}
 }
 
 func assertEqualTests(t *testing.T, got, want []*tip.TestFunction) {

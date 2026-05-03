@@ -2,7 +2,7 @@ package foo
 
 import "testing"
 
-func TestB1(t *testing.T) {
+func TestLiteralSubtestsWithHelper(t *testing.T) {
 	helperFunc(t)
 
 	t.Run("test1", func(t *testing.T) {
