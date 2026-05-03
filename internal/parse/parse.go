@@ -108,8 +108,14 @@ func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
 			if c := findStructSliceLiteralDeclarationFromAssignStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
+			if c := findMapLiteralDeclarationFromAssignStmt(s); c != nil {
+				newCs = append(newCs, c)
+			}
 		case *ast.DeclStmt:
 			if c := findStructSliceLiteralDeclarationFromDeclStmt(s); c != nil {
+				newCs = append(newCs, c)
+			}
+			if c := findMapLiteralDeclarationFromDeclStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
 		}
@@ -164,6 +170,53 @@ func findStructSliceLiteralDeclarationFromDeclStmt(decl *ast.DeclStmt) *structSl
 	return nil
 }
 
+func findMapLiteralDeclarationFromAssignStmt(assign *ast.AssignStmt) *mapLiteralDeclarationContext {
+	if len(assign.Lhs) != 1 || len(assign.Rhs) != 1 {
+		return nil
+	}
+	ident, ok := assign.Lhs[0].(*ast.Ident)
+	if !ok {
+		return nil
+	}
+	compLit, ok := assign.Rhs[0].(*ast.CompositeLit)
+	if !ok {
+		return nil
+	}
+	if _, ok := compLit.Type.(*ast.MapType); !ok {
+		return nil
+	}
+	return &mapLiteralDeclarationContext{
+		ident:   ident.Name,
+		compLit: compLit,
+	}
+}
+
+func findMapLiteralDeclarationFromDeclStmt(decl *ast.DeclStmt) *mapLiteralDeclarationContext {
+	genDecl, ok := decl.Decl.(*ast.GenDecl)
+	if !ok || genDecl.Tok != token.VAR {
+		return nil
+	}
+	for _, spec := range genDecl.Specs {
+		valueSpec, ok := spec.(*ast.ValueSpec)
+		if !ok || len(valueSpec.Names) != 1 || len(valueSpec.Values) != 1 {
+			continue
+		}
+		ident := valueSpec.Names[0]
+		compLit, ok := valueSpec.Values[0].(*ast.CompositeLit)
+		if !ok {
+			continue
+		}
+		if _, ok := compLit.Type.(*ast.MapType); !ok {
+			continue
+		}
+		return &mapLiteralDeclarationContext{
+			ident:   ident.Name,
+			compLit: compLit,
+		}
+	}
+	return nil
+}
+
 func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
 	var name unresolvedSubTestName
 
@@ -175,7 +228,7 @@ func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
 			name = n
 		}
 	case *ast.Ident:
-		name = findSubTestNameFromIdent(e)
+		name = findSubTestNameFromIdent(e, cs...)
 	case *ast.BinaryExpr:
 		// If it's a binary expression, we can't resolve it to a specific name without more context.
 		// This might happen in cases like `t.Run("test"+string(i), ...)`.
@@ -239,10 +292,30 @@ func findSubTestNameFromSelectorExpr(sel *ast.SelectorExpr, cs ...subTestContext
 	return n
 }
 
-func findSubTestNameFromIdent(ident *ast.Ident) *identSubTestName {
-	return &identSubTestName{
+func findSubTestNameFromIdent(ident *ast.Ident, cs ...subTestContext) *identSubTestName {
+	n := &identSubTestName{
 		name: ident.Name,
 	}
+	for _, c := range cs {
+		forRangeCtx, ok := c.(*forRangeContext)
+		if !ok {
+			continue
+		}
+		if n.name != forRangeCtx.keyIdent {
+			continue
+		}
+		for _, c := range cs {
+			mapCtx, ok := c.(*mapLiteralDeclarationContext)
+			if !ok {
+				continue
+			}
+			if mapCtx.ident != forRangeCtx.iterIdent {
+				continue
+			}
+			n.cases = mapCtx.extractTestCaseNames()
+		}
+	}
+	return n
 }
 
 type unresolvedSubTest struct {
@@ -294,11 +367,14 @@ func (s *selectorSubTestName) resolveTestName() ([]string, bool) {
 }
 
 type identSubTestName struct {
-	name string
+	name  string
+	cases []string
 }
 
 func (i *identSubTestName) resolveTestName() ([]string, bool) {
-	// todo: resolve the identifier to a specific name if possible
+	if len(i.cases) > 0 {
+		return i.cases, true
+	}
 	return []string{tip.UnresolvedTestCaseName}, false
 }
 
@@ -309,6 +385,40 @@ func (u *unknownSubTestName) resolveTestName() ([]string, bool) {
 }
 
 type subTestContext interface{}
+
+type mapLiteralDeclarationContext struct {
+	ident   string
+	compLit *ast.CompositeLit
+}
+
+func (c *mapLiteralDeclarationContext) extractTestCaseNames() []string {
+	ns := make([]string, 0)
+	if !c.isStringKeyMap() {
+		return ns
+	}
+	for _, elt := range c.compLit.Elts {
+		kv, ok := elt.(*ast.KeyValueExpr)
+		if !ok {
+			continue
+		}
+		key, ok := kv.Key.(*ast.BasicLit)
+		if !ok || key.Kind != token.STRING {
+			continue
+		}
+		n := strings.Trim(key.Value, `"`)
+		ns = append(ns, n)
+	}
+	return ns
+}
+
+func (c *mapLiteralDeclarationContext) isStringKeyMap() bool {
+	mapType, ok := c.compLit.Type.(*ast.MapType)
+	if !ok {
+		return false
+	}
+	keyIdent, ok := mapType.Key.(*ast.Ident)
+	return ok && keyIdent.Name == "string"
+}
 
 type structSliceLiteralDeclarationContext struct {
 	ident   string
