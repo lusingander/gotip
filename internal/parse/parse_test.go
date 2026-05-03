@@ -91,6 +91,14 @@ func wantTestA() []*tip.TestFunction {
 				{Name: "???", Subs: []*tip.SubTest{}},
 			},
 		},
+		{
+			Name: "TestA6",
+			Subs: []*tip.SubTest{
+				{Name: "test1", Subs: []*tip.SubTest{}},
+				{Name: "test2", Subs: []*tip.SubTest{}},
+				{Name: "test3", Subs: []*tip.SubTest{}},
+			},
+		},
 	}
 }
 
@@ -170,6 +178,7 @@ func wantSkipSubtestsTestA() []*tip.TestFunction {
 		{Name: "TestA3", Subs: []*tip.SubTest{}},
 		{Name: "TestA4", Subs: []*tip.SubTest{}},
 		{Name: "TestA5", Subs: []*tip.SubTest{}},
+		{Name: "TestA6", Subs: []*tip.SubTest{}},
 	}
 }
 

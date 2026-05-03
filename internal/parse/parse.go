@@ -105,6 +105,7 @@ func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
 			}
 			subs = append(subs, findSubTests(s.Body.List, newCs...)...)
 		case *ast.AssignStmt:
+			newCs = append(newCs, findStringIdentContextsFromAssignStmt(s)...)
 			if c := findStructSliceLiteralDeclarationFromAssignStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
@@ -112,6 +113,7 @@ func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
 				newCs = append(newCs, c)
 			}
 		case *ast.DeclStmt:
+			newCs = append(newCs, findStringIdentContextsFromDeclStmt(s)...)
 			if c := findStructSliceLiteralDeclarationFromDeclStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
@@ -217,6 +219,53 @@ func findMapLiteralDeclarationFromDeclStmt(decl *ast.DeclStmt) *mapLiteralDeclar
 	return nil
 }
 
+func findStringIdentContextsFromAssignStmt(assign *ast.AssignStmt) []subTestContext {
+	if len(assign.Lhs) != len(assign.Rhs) {
+		return nil
+	}
+	cs := make([]subTestContext, 0)
+	for i, lhs := range assign.Lhs {
+		ident, ok := lhs.(*ast.Ident)
+		if !ok {
+			continue
+		}
+		name, ok := stringLiteralValue(assign.Rhs[i])
+		if !ok {
+			continue
+		}
+		cs = append(cs, &stringIdentContext{
+			ident: ident.Name,
+			value: name,
+		})
+	}
+	return cs
+}
+
+func findStringIdentContextsFromDeclStmt(decl *ast.DeclStmt) []subTestContext {
+	genDecl, ok := decl.Decl.(*ast.GenDecl)
+	if !ok || (genDecl.Tok != token.CONST && genDecl.Tok != token.VAR) {
+		return nil
+	}
+	cs := make([]subTestContext, 0)
+	for _, spec := range genDecl.Specs {
+		valueSpec, ok := spec.(*ast.ValueSpec)
+		if !ok || len(valueSpec.Names) != len(valueSpec.Values) {
+			continue
+		}
+		for i, ident := range valueSpec.Names {
+			name, ok := stringLiteralValue(valueSpec.Values[i])
+			if !ok {
+				continue
+			}
+			cs = append(cs, &stringIdentContext{
+				ident: ident.Name,
+				value: name,
+			})
+		}
+	}
+	return cs
+}
+
 func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
 	var name unresolvedSubTestName
 
@@ -296,26 +345,34 @@ func findSubTestNameFromIdent(ident *ast.Ident, cs ...subTestContext) *identSubT
 	n := &identSubTestName{
 		name: ident.Name,
 	}
-	for _, c := range cs {
-		forRangeCtx, ok := c.(*forRangeContext)
-		if !ok {
-			continue
-		}
-		if n.name != forRangeCtx.keyIdent {
-			continue
-		}
-		for _, c := range cs {
-			mapCtx, ok := c.(*mapLiteralDeclarationContext)
-			if !ok {
-				continue
+	for i := len(cs) - 1; i >= 0; i-- {
+		switch c := cs[i].(type) {
+		case *stringIdentContext:
+			if n.name == c.ident {
+				n.cases = []string{c.value}
+				return n
 			}
-			if mapCtx.ident != forRangeCtx.iterIdent {
-				continue
+		case *forRangeContext:
+			if n.name == c.keyIdent {
+				n.cases = findMapTestCaseNames(c.iterIdent, cs[:i]...)
+				return n
 			}
-			n.cases = mapCtx.extractTestCaseNames()
 		}
 	}
 	return n
+}
+
+func findMapTestCaseNames(ident string, cs ...subTestContext) []string {
+	for i := len(cs) - 1; i >= 0; i-- {
+		mapCtx, ok := cs[i].(*mapLiteralDeclarationContext)
+		if !ok {
+			continue
+		}
+		if mapCtx.ident == ident {
+			return mapCtx.extractTestCaseNames()
+		}
+	}
+	return nil
 }
 
 type unresolvedSubTest struct {
@@ -386,6 +443,11 @@ func (u *unknownSubTestName) resolveTestName() ([]string, bool) {
 
 type subTestContext interface{}
 
+type stringIdentContext struct {
+	ident string
+	value string
+}
+
 type mapLiteralDeclarationContext struct {
 	ident   string
 	compLit *ast.CompositeLit
@@ -418,6 +480,14 @@ func (c *mapLiteralDeclarationContext) isStringKeyMap() bool {
 	}
 	keyIdent, ok := mapType.Key.(*ast.Ident)
 	return ok && keyIdent.Name == "string"
+}
+
+func stringLiteralValue(expr ast.Expr) (string, bool) {
+	lit, ok := expr.(*ast.BasicLit)
+	if !ok || lit.Kind != token.STRING {
+		return "", false
+	}
+	return strings.Trim(lit.Value, `"`), true
 }
 
 type structSliceLiteralDeclarationContext struct {

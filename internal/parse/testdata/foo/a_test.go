@@ -175,3 +175,38 @@ func TestA5(t *testing.T) {
 		})
 	}
 }
+
+func TestA6(t *testing.T) {
+	name := "test1"
+	t.Run(name, func(t *testing.T) {
+		a := 1
+		b := 2
+		got := a + b
+		want := 3
+		if got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
+	})
+
+	const constName = "test2"
+	t.Run(constName, func(t *testing.T) {
+		a := 2
+		b := 3
+		got := a + b
+		want := 5
+		if got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
+	})
+
+	var varName = "test3"
+	t.Run(varName, func(t *testing.T) {
+		a := 3
+		b := 4
+		got := a + b
+		want := 7
+		if got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
+	})
+}
