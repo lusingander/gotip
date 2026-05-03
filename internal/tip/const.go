@@ -2,7 +2,7 @@ package tip
 
 const (
 	ProgramName = "Gotip"
-	AppVersion  = "0.6.2"
+	AppVersion  = "0.6.3"
 )
 
 const (
