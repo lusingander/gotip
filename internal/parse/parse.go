@@ -6,6 +6,8 @@ import (
 	"go/parser"
 	"go/token"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/boyter/gocodewalker"
 	"github.com/lusingander/gotip/internal/tip"
@@ -51,12 +53,44 @@ func processFile(path string, skipSubtests bool) ([]*tip.TestFunction, error) {
 	testFunctions := make([]*tip.TestFunction, 0)
 	for _, decl := range node.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || !strings.HasPrefix(fn.Name.Name, "Test") {
+		if !ok || !isTestFunction(fn) {
 			continue
 		}
 		testFunctions = append(testFunctions, processTestFunction(fn, skipSubtests))
 	}
 	return testFunctions, nil
+}
+
+func isTestFunction(fn *ast.FuncDecl) bool {
+	if fn.Recv != nil || fn.Body == nil || !isTestName(fn.Name.Name) {
+		return false
+	}
+	if fn.Type.Params == nil || len(fn.Type.Params.List) != 1 {
+		return false
+	}
+
+	star, ok := fn.Type.Params.List[0].Type.(*ast.StarExpr)
+	if !ok {
+		return false
+	}
+	sel, ok := star.X.(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "T" {
+		return false
+	}
+	pkg, ok := sel.X.(*ast.Ident)
+	return ok && pkg.Name == "testing"
+}
+
+func isTestName(name string) bool {
+	if !strings.HasPrefix(name, "Test") {
+		return false
+	}
+	if len(name) == len("Test") {
+		return true
+	}
+	r, _ := utf8.DecodeRuneInString(name[len("Test"):])
+	// Match go test: Test followed by a non-lowercase rune is a test.
+	return !unicode.IsLower(r)
 }
 
 func processTestFunction(fn *ast.FuncDecl, skipSubtests bool) *tip.TestFunction {
