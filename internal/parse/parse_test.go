@@ -16,6 +16,7 @@ func TestProcessFile(t *testing.T) {
 		{"a", "testdata/foo/a_test.go", wantTestA()},
 		{"b", "testdata/foo/b_test.go", wantTestB()},
 		{"c", "testdata/bar/c_test.go", wantTestC()},
+		{"d", "testdata/baz/d_test.go", wantTestD()},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -144,6 +145,15 @@ func wantTestC() []*tip.TestFunction {
 	}
 }
 
+func wantTestD() []*tip.TestFunction {
+	return []*tip.TestFunction{
+		{
+			Name: "TestValid",
+			Subs: []*tip.SubTest{},
+		},
+	}
+}
+
 func TestProcessFile_skipSubtests(t *testing.T) {
 	skipSubtests := true
 	tests := []struct {
@@ -154,6 +164,7 @@ func TestProcessFile_skipSubtests(t *testing.T) {
 		{"a", "testdata/foo/a_test.go", wantSkipSubtestsTestA()},
 		{"b", "testdata/foo/b_test.go", wantSkipSubtestsTestB()},
 		{"c", "testdata/bar/c_test.go", wantSkipSubtestsTestC()},
+		{"d", "testdata/baz/d_test.go", wantSkipSubtestsTestD()},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -188,6 +199,10 @@ func wantSkipSubtestsTestB() []*tip.TestFunction {
 
 func wantSkipSubtestsTestC() []*tip.TestFunction {
 	return []*tip.TestFunction{{Name: "TestNestedLiteralSubtests", Subs: []*tip.SubTest{}}}
+}
+
+func wantSkipSubtestsTestD() []*tip.TestFunction {
+	return []*tip.TestFunction{{Name: "TestValid", Subs: []*tip.SubTest{}}}
 }
 
 func assertEqualTests(t *testing.T, got, want []*tip.TestFunction) {
