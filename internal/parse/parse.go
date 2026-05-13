@@ -69,16 +69,7 @@ func isTestFunction(fn *ast.FuncDecl) bool {
 		return false
 	}
 
-	star, ok := fn.Type.Params.List[0].Type.(*ast.StarExpr)
-	if !ok {
-		return false
-	}
-	sel, ok := star.X.(*ast.SelectorExpr)
-	if !ok || sel.Sel.Name != "T" {
-		return false
-	}
-	pkg, ok := sel.X.(*ast.Ident)
-	return ok && pkg.Name == "testing"
+	return isTestingTType(fn.Type.Params.List[0].Type)
 }
 
 func isTestName(name string) bool {
@@ -101,7 +92,7 @@ func processTestFunction(fn *ast.FuncDecl, skipSubtests bool) *tip.TestFunction 
 		}
 	}
 
-	unresolvedSubTests := findSubTests(fn.Body.List)
+	unresolvedSubTests := findSubTests(fn.Body.List, testingTParamNames(fn.Type.Params))
 
 	subs := make([]*tip.SubTest, 0)
 	for _, sub := range unresolvedSubTests {
@@ -114,7 +105,7 @@ func processTestFunction(fn *ast.FuncDecl, skipSubtests bool) *tip.TestFunction 
 	}
 }
 
-func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
+func findSubTests(stmts []ast.Stmt, testingTReceivers []string, cs ...subTestContext) []*unresolvedSubTest {
 	newCs := append([]subTestContext{}, cs...)
 	subs := make([]*unresolvedSubTest, 0)
 	for _, stmt := range stmts {
@@ -125,19 +116,19 @@ func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
 				continue
 			}
 			sel, ok := call.Fun.(*ast.SelectorExpr)
-			if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 {
+			if !ok || sel.Sel.Name != "Run" || len(call.Args) < 2 || !isTestingTRunSelector(sel, testingTReceivers) {
 				continue
 			}
 			subs = append(subs, findSubTest(call.Args, newCs...))
 		case *ast.BlockStmt:
-			subs = append(subs, findSubTests(s.List, newCs...)...)
+			subs = append(subs, findSubTests(s.List, testingTReceivers, newCs...)...)
 		case *ast.ForStmt:
-			subs = append(subs, findSubTests(s.Body.List, newCs...)...)
+			subs = append(subs, findSubTests(s.Body.List, testingTReceivers, newCs...)...)
 		case *ast.RangeStmt:
 			if c := forRangeContextFromRangeStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
-			subs = append(subs, findSubTests(s.Body.List, newCs...)...)
+			subs = append(subs, findSubTests(s.Body.List, testingTReceivers, newCs...)...)
 		case *ast.AssignStmt:
 			newCs = append(newCs, findStringIdentContextsFromAssignStmt(s)...)
 			if c := findStructSliceLiteralDeclarationFromAssignStmt(s); c != nil {
@@ -157,6 +148,48 @@ func findSubTests(stmts []ast.Stmt, cs ...subTestContext) []*unresolvedSubTest {
 		}
 	}
 	return subs
+}
+
+func isTestingTRunSelector(sel *ast.SelectorExpr, testingTReceivers []string) bool {
+	ident, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return false
+	}
+	for _, receiver := range testingTReceivers {
+		if ident.Name == receiver {
+			return true
+		}
+	}
+	return false
+}
+
+func testingTParamNames(params *ast.FieldList) []string {
+	if params == nil {
+		return nil
+	}
+	names := make([]string, 0)
+	for _, param := range params.List {
+		if !isTestingTType(param.Type) {
+			continue
+		}
+		for _, name := range param.Names {
+			names = append(names, name.Name)
+		}
+	}
+	return names
+}
+
+func isTestingTType(expr ast.Expr) bool {
+	star, ok := expr.(*ast.StarExpr)
+	if !ok {
+		return false
+	}
+	sel, ok := star.X.(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "T" {
+		return false
+	}
+	pkg, ok := sel.X.(*ast.Ident)
+	return ok && pkg.Name == "testing"
 }
 
 func findStructSliceLiteralDeclarationFromAssignStmt(assign *ast.AssignStmt) *structSliceLiteralDeclarationContext {
@@ -326,7 +359,7 @@ func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
 
 	var subs []*unresolvedSubTest
 	if fnLit, ok := exprs[1].(*ast.FuncLit); ok {
-		subs = findSubTests(fnLit.Body.List)
+		subs = findSubTests(fnLit.Body.List, testingTParamNames(fnLit.Type.Params))
 	}
 
 	return &unresolvedSubTest{
