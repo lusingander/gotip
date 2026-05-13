@@ -6,6 +6,12 @@ import (
 	"testing"
 )
 
+type fakeRunner struct{}
+
+func (fakeRunner) Run(name string, f func()) {
+	f()
+}
+
 func TestSimpleAddition(t *testing.T) {
 	a := 1
 	b := 2
@@ -208,5 +214,19 @@ func TestStringIdentNames(t *testing.T) {
 		if got != want {
 			t.Errorf("got %d, want %d", got, want)
 		}
+	})
+}
+
+func TestNonTestingRunIgnored(t *testing.T) {
+	runner := fakeRunner{}
+	runner.Run("not-a-subtest", func() {})
+}
+
+func TestNestedSubtestsWithRenamedTestingReceiver(t *testing.T) {
+	runner := fakeRunner{}
+
+	t.Run("outer", func(st *testing.T) {
+		st.Run("inner", func(t *testing.T) {})
+		runner.Run("not-a-subtest", func() {})
 	})
 }

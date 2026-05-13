@@ -100,6 +100,21 @@ func wantTestA() []*tip.TestFunction {
 				{Name: "test3", Subs: []*tip.SubTest{}},
 			},
 		},
+		{
+			Name: "TestNonTestingRunIgnored",
+			Subs: []*tip.SubTest{},
+		},
+		{
+			Name: "TestNestedSubtestsWithRenamedTestingReceiver",
+			Subs: []*tip.SubTest{
+				{
+					Name: "outer",
+					Subs: []*tip.SubTest{
+						{Name: "inner", Subs: []*tip.SubTest{}},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -190,6 +205,8 @@ func wantSkipSubtestsTestA() []*tip.TestFunction {
 		{Name: "TestConcatGeneratedName", Subs: []*tip.SubTest{}},
 		{Name: "TestSprintfGeneratedName", Subs: []*tip.SubTest{}},
 		{Name: "TestStringIdentNames", Subs: []*tip.SubTest{}},
+		{Name: "TestNonTestingRunIgnored", Subs: []*tip.SubTest{}},
+		{Name: "TestNestedSubtestsWithRenamedTestingReceiver", Subs: []*tip.SubTest{}},
 	}
 }
 
