@@ -117,6 +117,8 @@ Example JSON output:
 }
 ```
 
+The JSON output follows [`schema/list.schema.json`](./schema/list.schema.json).
+
 The `list` command uses the same discovery rules as the TUI, including subtest inference and `--skip-subtests`.
 
 ### Options

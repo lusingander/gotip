@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "gotip list JSON output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["files"],
+  "properties": {
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "tests"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/test"
+          }
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "subtests"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "subtests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/subtest"
+          }
+        }
+      }
+    },
+    "subtest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "resolved", "subtests"],
+      "properties": {
+        "name": {
+          "type": ["string", "null"]
+        },
+        "resolved": {
+          "type": "boolean"
+        },
+        "subtests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/subtest"
+          }
+        }
+      }
+    }
+  }
+}
