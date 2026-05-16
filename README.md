@@ -12,6 +12,7 @@ Key features:
 
 - Fuzzy filtering of test cases
 - Detection of subtest names defined via table-driven tests (partial support)
+- List discovered tests in text or JSON format
 - Run individual subtests or grouped subtests
 - View and re-run tests from execution history
 
@@ -40,22 +41,6 @@ You can pass extra flags directly to `go test` by appending them after `--`:
 ```
 gotip -- -v -count=1
 ```
-
-### Listing discovered tests
-
-You can inspect the statically discovered test tree without opening the UI:
-
-```
-gotip list
-```
-
-For machine-readable output, use JSON:
-
-```
-gotip list --format=json
-```
-
-The `list` command uses the same discovery rules as the TUI, including subtest inference and `--skip-subtests`.
 
 ### Running a parent test group
 
@@ -87,6 +72,52 @@ gotip --rerun
 ```
 
 This will immediately execute the most recent test from your history.
+
+### Listing discovered tests
+
+You can inspect the statically discovered test tree without opening the UI:
+
+```
+gotip list
+```
+
+Example text output:
+
+```text
+# ./foo/foo_test.go
+- TestFoo
+  - case1
+  - case2
+- TestBar
+```
+
+For machine-readable output, use JSON:
+
+```
+gotip list --format=json
+```
+
+Example JSON output:
+
+```json
+{
+  "files": [
+    {
+      "path": "./foo/foo_test.go",
+      "tests": [
+        {
+          "name": "TestFoo",
+          "subtests": [
+            { "name": "case1", "resolved": true, "subtests": [] }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+The `list` command uses the same discovery rules as the TUI, including subtest inference and `--skip-subtests`.
 
 ### Options
 
