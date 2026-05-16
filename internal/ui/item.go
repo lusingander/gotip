@@ -41,12 +41,16 @@ func toTestCaseItems(tests map[string][]*tip.TestFunction) []list.Item {
 func toTestCaseItemsFromSubTests(ss []*tip.SubTest, path, base string) []list.Item {
 	items := make([]list.Item, 0)
 	for _, s := range ss {
-		name := base + "/" + s.Name
+		subName := s.Name
+		if !s.Resolved {
+			subName = tip.UnresolvedTestCaseName
+		}
+		name := base + "/" + subName
 		if len(s.Subs) == 0 {
 			item := &testCaseItem{
 				path:         path,
 				name:         name,
-				isUnresolved: s.IsUnresolvedSubTests,
+				isUnresolved: !s.Resolved,
 			}
 			items = append(items, item)
 		} else {

@@ -456,9 +456,9 @@ func (t *unresolvedSubTest) resolve() []*tip.SubTest {
 	ns, resolved := t.name.resolveTestName()
 	for _, n := range ns {
 		test := &tip.SubTest{
-			Name:                 n,
-			Subs:                 subTests,
-			IsUnresolvedSubTests: !resolved,
+			Name:     n,
+			Resolved: resolved,
+			Subs:     subTests,
 		}
 		tests = append(tests, test)
 	}
@@ -485,7 +485,7 @@ type selectorSubTestName struct {
 
 func (s *selectorSubTestName) resolveTestName() ([]string, bool) {
 	if len(s.cases) == 0 {
-		return []string{tip.UnresolvedTestCaseName}, false
+		return []string{""}, false
 	}
 	return s.cases, true
 }
@@ -499,13 +499,13 @@ func (i *identSubTestName) resolveTestName() ([]string, bool) {
 	if len(i.cases) > 0 {
 		return i.cases, true
 	}
-	return []string{tip.UnresolvedTestCaseName}, false
+	return []string{""}, false
 }
 
 type unknownSubTestName struct{}
 
 func (u *unknownSubTestName) resolveTestName() ([]string, bool) {
-	return []string{tip.UnresolvedTestCaseName}, false
+	return []string{""}, false
 }
 
 type subTestContext interface{}

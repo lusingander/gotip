@@ -11,9 +11,9 @@ type TestFunction struct {
 }
 
 type SubTest struct {
-	Name                 string
-	Subs                 []*SubTest
-	IsUnresolvedSubTests bool
+	Name     string
+	Resolved bool
+	Subs     []*SubTest
 }
 
 type Target struct {

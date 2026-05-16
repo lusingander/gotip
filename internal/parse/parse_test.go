@@ -6,6 +6,60 @@ import (
 	"github.com/lusingander/gotip/internal/tip"
 )
 
+func TestUnresolvedSubTestResolve(t *testing.T) {
+	tests := []struct {
+		name string
+		sub  *unresolvedSubTest
+		want []*tip.SubTest
+	}{
+		{
+			name: "literal name",
+			sub: &unresolvedSubTest{
+				name: &literalSubTestName{name: "outer"},
+			},
+			want: []*tip.SubTest{{Name: "outer", Resolved: true, Subs: []*tip.SubTest{}}},
+		},
+		{
+			name: "unresolved name",
+			sub: &unresolvedSubTest{
+				name: &unknownSubTestName{},
+			},
+			want: []*tip.SubTest{{Name: "", Resolved: false, Subs: []*tip.SubTest{}}},
+		},
+		{
+			name: "expanded names share resolved children",
+			sub: &unresolvedSubTest{
+				name: &selectorSubTestName{cases: []string{"first", "second"}},
+				subs: []*unresolvedSubTest{
+					{name: &literalSubTestName{name: "child"}},
+				},
+			},
+			want: []*tip.SubTest{
+				{
+					Name:     "first",
+					Resolved: true,
+					Subs: []*tip.SubTest{
+						{Name: "child", Resolved: true, Subs: []*tip.SubTest{}},
+					},
+				},
+				{
+					Name:     "second",
+					Resolved: true,
+					Subs: []*tip.SubTest{
+						{Name: "child", Resolved: true, Subs: []*tip.SubTest{}},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertEqualSubTests(t, tt.sub.resolve(), tt.want)
+		})
+	}
+}
+
 func TestProcessFile(t *testing.T) {
 	skipSubtests := false
 	tests := []struct {
@@ -39,65 +93,65 @@ func wantTestA() []*tip.TestFunction {
 		{
 			Name: "TestStructSlicePositionalFields",
 			Subs: []*tip.SubTest{
-				{Name: "test1", Subs: []*tip.SubTest{}},
-				{Name: "test2", Subs: []*tip.SubTest{}},
-				{Name: "test3", Subs: []*tip.SubTest{}},
+				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test2", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test3", Resolved: true, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestStructSliceKeyedFields",
 			Subs: []*tip.SubTest{
-				{Name: "test1", Subs: []*tip.SubTest{}},
-				{Name: "test2", Subs: []*tip.SubTest{}},
-				{Name: "test3", Subs: []*tip.SubTest{}},
+				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test2", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test3", Resolved: true, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestNamedStructSlice",
 			Subs: []*tip.SubTest{
-				{Name: "test1", Subs: []*tip.SubTest{}},
-				{Name: "test2", Subs: []*tip.SubTest{}},
-				{Name: "test3", Subs: []*tip.SubTest{}},
+				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test2", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test3", Resolved: true, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestVarStructSlice",
 			Subs: []*tip.SubTest{
-				{Name: "test1", Subs: []*tip.SubTest{}},
-				{Name: "test2", Subs: []*tip.SubTest{}},
+				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test2", Resolved: true, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestNestedStructFieldName",
 			Subs: []*tip.SubTest{
-				{Name: "???", Subs: []*tip.SubTest{}},
+				{Name: "", Resolved: false, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestMapKeySubtests",
 			Subs: []*tip.SubTest{
-				{Name: "test1", Subs: []*tip.SubTest{}},
-				{Name: "test2", Subs: []*tip.SubTest{}},
+				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test2", Resolved: true, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestConcatGeneratedName",
 			Subs: []*tip.SubTest{
-				{Name: "???", Subs: []*tip.SubTest{}},
+				{Name: "", Resolved: false, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestSprintfGeneratedName",
 			Subs: []*tip.SubTest{
-				{Name: "???", Subs: []*tip.SubTest{}},
+				{Name: "", Resolved: false, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
 			Name: "TestStringIdentNames",
 			Subs: []*tip.SubTest{
-				{Name: "test1", Subs: []*tip.SubTest{}},
-				{Name: "test2", Subs: []*tip.SubTest{}},
-				{Name: "test3", Subs: []*tip.SubTest{}},
+				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test2", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test3", Resolved: true, Subs: []*tip.SubTest{}},
 			},
 		},
 		{
@@ -108,9 +162,10 @@ func wantTestA() []*tip.TestFunction {
 			Name: "TestNestedSubtestsWithRenamedTestingReceiver",
 			Subs: []*tip.SubTest{
 				{
-					Name: "outer",
+					Name:     "outer",
+					Resolved: true,
 					Subs: []*tip.SubTest{
-						{Name: "inner", Subs: []*tip.SubTest{}},
+						{Name: "inner", Resolved: true, Subs: []*tip.SubTest{}},
 					},
 				},
 			},
@@ -123,8 +178,8 @@ func wantTestB() []*tip.TestFunction {
 		{
 			Name: "TestLiteralSubtestsWithHelper",
 			Subs: []*tip.SubTest{
-				{Name: "test1", Subs: []*tip.SubTest{}},
-				{Name: "test2", Subs: []*tip.SubTest{}},
+				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "test2", Resolved: true, Subs: []*tip.SubTest{}},
 			},
 		},
 	}
@@ -136,21 +191,25 @@ func wantTestC() []*tip.TestFunction {
 			Name: "TestNestedLiteralSubtests",
 			Subs: []*tip.SubTest{
 				{
-					Name: "test1",
+					Name:     "test1",
+					Resolved: true,
 					Subs: []*tip.SubTest{
 						{
-							Name: "subtest1",
-							Subs: []*tip.SubTest{},
+							Name:     "subtest1",
+							Resolved: true,
+							Subs:     []*tip.SubTest{},
 						},
 						{
-							Name: "subtest2",
-							Subs: []*tip.SubTest{},
+							Name:     "subtest2",
+							Resolved: true,
+							Subs:     []*tip.SubTest{},
 						},
 						{
-							Name: "subtest3",
+							Name:     "subtest3",
+							Resolved: true,
 							Subs: []*tip.SubTest{
-								{Name: "subsubtest1", Subs: []*tip.SubTest{}},
-								{Name: "subsubtest2", Subs: []*tip.SubTest{}},
+								{Name: "subsubtest1", Resolved: true, Subs: []*tip.SubTest{}},
+								{Name: "subsubtest2", Resolved: true, Subs: []*tip.SubTest{}},
 							},
 						},
 					},
@@ -253,6 +312,10 @@ func assertEqualSubTests(t *testing.T, got, want []*tip.SubTest) {
 func assertEqualSubTest(t *testing.T, got, want *tip.SubTest) {
 	if got.Name != want.Name {
 		t.Errorf("got name = %s, want %s", got.Name, want.Name)
+		return
+	}
+	if got.Resolved != want.Resolved {
+		t.Errorf("got resolved = %t, want %t", got.Resolved, want.Resolved)
 		return
 	}
 	if len(got.Subs) != len(want.Subs) {
