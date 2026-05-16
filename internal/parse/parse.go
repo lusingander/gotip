@@ -640,30 +640,3 @@ func forRangeContextFromRangeStmt(stmt *ast.RangeStmt) *forRangeContext {
 		iterIdent:  iterName,
 	}
 }
-
-func PrintTestFunctions(tests map[string][]*tip.TestFunction) {
-	for path, testFunctions := range tests {
-		fmt.Printf("# %s\n", path)
-		for _, tf := range testFunctions {
-			printTestFunction(tf)
-		}
-		fmt.Println()
-	}
-}
-
-func printTestFunction(tf *tip.TestFunction) {
-	fmt.Printf("- %s\n", tf.Name)
-	if len(tf.Subs) > 0 {
-		printSubTests(tf.Subs, 1)
-	}
-}
-
-func printSubTests(subs []*tip.SubTest, indentLevel int) {
-	indent := strings.Repeat("  ", indentLevel)
-	for _, sub := range subs {
-		fmt.Printf("%s- %s\n", indent, sub.Name)
-		if len(sub.Subs) > 0 {
-			printSubTests(sub.Subs, indentLevel+1)
-		}
-	}
-}

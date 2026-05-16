@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"slices"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/lusingander/gotip/internal/command"
+	"github.com/lusingander/gotip/internal/listfmt"
 	"github.com/lusingander/gotip/internal/parse"
 	"github.com/lusingander/gotip/internal/tip"
 	"github.com/lusingander/gotip/internal/ui"
@@ -20,6 +22,18 @@ type options struct {
 	Version      bool   `short:"V" long:"version" description:"Print version"`
 }
 
+type listOptions struct {
+	SkipSubtests bool   `short:"s" long:"skip-subtests" description:"Skip subtest detection"`
+	Format       string `long:"format" description:"Output format" choice:"text" choice:"json" default:"text"`
+}
+
+type parsedArgs struct {
+	Options     *options
+	ListOptions *listOptions
+	Command     string
+	TestArgs    []string
+}
+
 func main() {
 	code, err := run(os.Args)
 	if err != nil {
@@ -28,7 +42,10 @@ func main() {
 	os.Exit(code)
 }
 
-func parseArgs(args []string) (*options, []string, error) {
+func parseArgs(args []string) (*parsedArgs, error) {
+	if len(args) > 0 {
+		args = args[1:]
+	}
 	var cliArgs, testArgs []string
 	if i := slices.Index(args, "--"); i != -1 {
 		cliArgs = args[:i]
@@ -38,20 +55,39 @@ func parseArgs(args []string) (*options, []string, error) {
 		testArgs = nil
 	}
 	var opts options
-	if _, err := flags.ParseArgs(&opts, cliArgs); err != nil {
-		return nil, nil, err
+	var listOpts listOptions
+	parser := flags.NewNamedParser("gotip", flags.Default)
+	if _, err := parser.AddGroup("Application Options", "", &opts); err != nil {
+		return nil, err
 	}
-	return &opts, testArgs, nil
+	if _, err := parser.AddCommand("list", "List discovered tests", "List discovered tests without launching the UI", &listOpts); err != nil {
+		return nil, err
+	}
+	parser.SubcommandsOptional = true
+	if _, err := parser.ParseArgs(cliArgs); err != nil {
+		return nil, err
+	}
+	command := ""
+	if parser.Active != nil {
+		command = parser.Active.Name
+	}
+	return &parsedArgs{
+		Options:     &opts,
+		ListOptions: &listOpts,
+		Command:     command,
+		TestArgs:    testArgs,
+	}, nil
 }
 
 func run(args []string) (int, error) {
-	opt, testArgs, err := parseArgs(args)
+	parsed, err := parseArgs(args)
 	if err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			return 0, nil
 		}
 		return 1, nil
 	}
+	opt := parsed.Options
 
 	if opt.Version {
 		fmt.Fprintf(os.Stderr, "gotip %s\n", tip.AppVersion)
@@ -62,6 +98,29 @@ func run(args []string) (int, error) {
 	if err != nil {
 		return 1, err
 	}
+
+	if parsed.Command == "list" {
+		if len(parsed.TestArgs) > 0 {
+			return 1, errors.New("list does not accept test arguments after --")
+		}
+		skipSubtests := opt.SkipSubtests || parsed.ListOptions.SkipSubtests
+		tests, err := parse.ProcessFilesRecursively(".", conf.Ignore, skipSubtests)
+		if err != nil {
+			return 1, err
+		}
+		switch parsed.ListOptions.Format {
+		case "text":
+			if err := listfmt.WriteText(os.Stdout, tests); err != nil {
+				return 1, err
+			}
+		case "json":
+			if err := listfmt.WriteJSON(os.Stdout, tests); err != nil {
+				return 1, err
+			}
+		}
+		return 0, nil
+	}
+
 	histories, err := tip.LoadHistories(".")
 	if err != nil {
 		return 1, err
@@ -72,7 +131,7 @@ func run(args []string) (int, error) {
 			fmt.Fprintln(os.Stderr, "No test history found.")
 			return 1, nil
 		}
-		code, err := command.Test(histories.Histories[0].ToTarget(), testArgs, conf)
+		code, err := command.Test(histories.Histories[0].ToTarget(), parsed.TestArgs, conf)
 		if err != nil {
 			return 1, err
 		}
@@ -92,7 +151,7 @@ func run(args []string) (int, error) {
 		return 0, nil
 	}
 
-	code, err := command.Test(target, testArgs, conf)
+	code, err := command.Test(target, parsed.TestArgs, conf)
 	if err != nil {
 		return 1, err
 	}

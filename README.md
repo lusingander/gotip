@@ -41,6 +41,22 @@ You can pass extra flags directly to `go test` by appending them after `--`:
 gotip -- -v -count=1
 ```
 
+### Listing discovered tests
+
+You can inspect the statically discovered test tree without opening the UI:
+
+```
+gotip list
+```
+
+For machine-readable output, use JSON:
+
+```
+gotip list --format=json
+```
+
+The `list` command uses the same discovery rules as the TUI, including subtest inference and `--skip-subtests`.
+
 ### Running a parent test group
 
 While a test is selected, press <kbd>Backspace</kbd> to move up to its parent test group.
@@ -76,7 +92,7 @@ This will immediately execute the most recent test from your history.
 
 ```
 Usage:
-  gotip [OPTIONS]
+  gotip [OPTIONS] [list]
 
 Application Options:
   -v, --view=[all|history]   Default view (default: all)
@@ -87,6 +103,20 @@ Application Options:
 
 Help Options:
   -h, --help                 Show this help message
+
+Available commands:
+  list  List discovered tests
+```
+
+`gotip list --help` shows options specific to the non-interactive listing command:
+
+```
+Usage:
+  gotip [OPTIONS] list [list-OPTIONS]
+
+[list command options]
+      -s, --skip-subtests      Skip subtest detection
+          --format=[text|json] Output format (default: text)
 ```
 
 ### Config
