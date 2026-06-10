@@ -45,7 +45,7 @@ var (
 )
 
 const (
-	ellipsis = "…"
+	ellipsis = "..."
 )
 
 type testCaseItemDelegate struct{}
