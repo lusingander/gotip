@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/lusingander/gotip/internal/tip"
 )
 
@@ -294,7 +295,14 @@ func (m model) View() string {
 
 	var headerContent string
 	if m.tmpTarget != nil {
-		name := selectedLabelStyle.Render("Selected: ") + selectedNameStyle.Render(m.tmpTarget.TestNamePattern)
+		selectedLabel := "Selected: "
+		selectedNameWidth := m.w - headerStyle.GetHorizontalFrameSize() - lipgloss.Width(selectedLabel)
+		if m.tmpTarget.IsPrefix {
+			selectedNameWidth -= lipgloss.Width("*")
+		}
+		selectedName := ansi.Truncate(m.tmpTarget.TestNamePattern, selectedNameWidth, ellipsis)
+
+		name := selectedLabelStyle.Render(selectedLabel) + selectedNameStyle.Render(selectedName)
 		if m.tmpTarget.IsPrefix {
 			name += selectedLabelStyle.Render("*")
 		}
@@ -338,7 +346,7 @@ func (m model) View() string {
 		footerView = footerDividerStyle.Render(" | ") + footerMsgStyle.Render("History  ")
 	}
 
-	footerSpaceWidth := m.w - lipgloss.Width(footerStatus) - lipgloss.Width(footerSelectedIndex) - lipgloss.Width(footerView) - 2 /* padding */
+	footerSpaceWidth := max(m.w-lipgloss.Width(footerStatus)-lipgloss.Width(footerSelectedIndex)-lipgloss.Width(footerView)-2 /* padding */, 0)
 	footerSpace := strings.Repeat(" ", footerSpaceWidth)
 
 	footer := footerStyle.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex + footerView)
@@ -383,7 +391,7 @@ func (m model) helpView() string {
 
 	footerView := footerDividerStyle.Render(" | ") + footerMsgStyle.Render("Help     ")
 
-	footerSpaceWidth := m.w - lipgloss.Width(footerView) - 2 /* padding */
+	footerSpaceWidth := max(m.w-lipgloss.Width(footerView)-2 /* padding */, 0)
 	footerSpace := strings.Repeat(" ", footerSpaceWidth)
 
 	footer := footerStyle.Width(m.w).Render(footerSpace + footerView)
