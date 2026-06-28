@@ -34,6 +34,12 @@ gotip
 
 While a test is selected, press <kbd>Enter</kbd> to run it using `go test`.
 
+To show only tests from a specific package, use `--package`:
+
+```
+gotip --package ./internal/parse
+```
+
 ### Passing additional arguments
 
 You can pass extra flags directly to `go test` by appending them after `--`:
@@ -97,6 +103,12 @@ For machine-readable output, use JSON:
 gotip list --format=json
 ```
 
+To list tests from a specific package, use `--package`. Package matching is exact; `internal/parse` is treated as `./internal/parse`, but `./internal` does not match `./internal/parse`.
+
+```
+gotip list --package ./internal/parse
+```
+
 Example JSON output:
 
 ```json
@@ -128,14 +140,15 @@ Usage:
   gotip [OPTIONS] [list]
 
 Application Options:
-  -v, --view=[all|history]   Default view (default: all)
-  -f, --filter=[fuzzy|exact] Default filter type (default: fuzzy)
-  -s, --skip-subtests        Skip subtest detection
-  -r, --rerun                Rerun the last test without showing the UI
-  -V, --version              Print version
+  -v, --view=[all|history]      Default view (default: all)
+  -f, --filter=[fuzzy|exact]    Default filter type (default: fuzzy)
+  -p, --package=PACKAGE         Filter by package name
+  -s, --skip-subtests           Skip subtest detection
+  -r, --rerun                   Rerun the last test without showing the UI
+  -V, --version                 Print version
 
 Help Options:
-  -h, --help                 Show this help message
+  -h, --help                    Show this help message
 
 Available commands:
   list  List discovered tests
@@ -148,8 +161,9 @@ Usage:
   gotip [OPTIONS] list [list-OPTIONS]
 
 [list command options]
-      -s, --skip-subtests      Skip subtest detection
-          --format=[text|json] Output format (default: text)
+      -p, --package=PACKAGE       Filter by package name
+      -s, --skip-subtests         Skip subtest detection
+          --format=[text|json]    Output format (default: text)
 ```
 
 ### Config
