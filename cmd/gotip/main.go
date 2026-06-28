@@ -15,16 +15,18 @@ import (
 )
 
 type options struct {
-	View         string `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
-	Filter       string `short:"f" long:"filter" description:"Default filter type" choice:"fuzzy" choice:"exact" default:"fuzzy"`
-	SkipSubtests bool   `short:"s" long:"skip-subtests" description:"Skip subtest detection"`
-	Rerun        bool   `short:"r" long:"rerun" description:"Rerun the last test without showing the UI"`
-	Version      bool   `short:"V" long:"version" description:"Print version"`
+	View         string   `short:"v" long:"view" description:"Default view" choice:"all" choice:"history" default:"all"`
+	Filter       string   `short:"f" long:"filter" description:"Default filter type" choice:"fuzzy" choice:"exact" default:"fuzzy"`
+	Packages     []string `short:"p" long:"package" value-name:"PACKAGE" description:"Filter by package name"`
+	SkipSubtests bool     `short:"s" long:"skip-subtests" description:"Skip subtest detection"`
+	Rerun        bool     `short:"r" long:"rerun" description:"Rerun the last test without showing the UI"`
+	Version      bool     `short:"V" long:"version" description:"Print version"`
 }
 
 type listOptions struct {
-	SkipSubtests bool   `short:"s" long:"skip-subtests" description:"Skip subtest detection"`
-	Format       string `long:"format" description:"Output format" choice:"text" choice:"json" default:"text"`
+	Packages     []string `short:"p" long:"package" value-name:"PACKAGE" description:"Filter by package name"`
+	SkipSubtests bool     `short:"s" long:"skip-subtests" description:"Skip subtest detection"`
+	Format       string   `long:"format" description:"Output format" choice:"text" choice:"json" default:"text"`
 }
 
 type parsedArgs struct {
@@ -108,6 +110,9 @@ func run(args []string) (int, error) {
 		if err != nil {
 			return 1, err
 		}
+		packages := append([]string{}, opt.Packages...)
+		packages = append(packages, parsed.ListOptions.Packages...)
+		tests = tip.FilterTestsByPackages(tests, packages)
 		switch parsed.ListOptions.Format {
 		case "text":
 			if err := listfmt.WriteText(os.Stdout, tests); err != nil {
@@ -142,6 +147,7 @@ func run(args []string) (int, error) {
 	if err != nil {
 		return 1, err
 	}
+	tests = tip.FilterTestsByPackages(tests, opt.Packages)
 
 	target, err := ui.Start(tests, histories, conf, opt.View, opt.Filter)
 	if err != nil {
