@@ -34,7 +34,7 @@ gotip
 
 While a test is selected, press <kbd>Enter</kbd> to run it using `go test`.
 
-To show only tests from a specific package, use `--package`:
+To show only tests and histories from a specific package, use `--package`:
 
 ```
 gotip --package ./internal/parse

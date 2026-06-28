@@ -148,8 +148,9 @@ func run(args []string) (int, error) {
 		return 1, err
 	}
 	tests = tip.FilterTestsByPackages(tests, opt.Packages)
+	displayHistories := tip.FilterHistoriesByPackages(histories, opt.Packages)
 
-	target, err := ui.Start(tests, histories, conf, opt.View, opt.Filter)
+	target, err := ui.Start(tests, displayHistories, conf, opt.View, opt.Filter)
 	if err != nil {
 		return 1, err
 	}

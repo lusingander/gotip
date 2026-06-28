@@ -21,6 +21,35 @@ func FilterTestsByPackages(tests map[string][]*TestFunction, packages []string) 
 	return filtered
 }
 
+func FilterHistoriesByPackages(histories *Histories, packages []string) *Histories {
+	if len(packages) == 0 {
+		return histories
+	}
+
+	packageSet := make(map[string]struct{}, len(packages))
+	for _, pkg := range packages {
+		packageSet[normalizePackageName(pkg)] = struct{}{}
+	}
+
+	filtered := &Histories{
+		ProjectDir: histories.ProjectDir,
+		Histories:  make([]*History, 0, len(histories.Histories)),
+	}
+	for _, history := range histories.Histories {
+		if _, ok := packageSet[historyPackageName(history)]; ok {
+			filtered.Histories = append(filtered.Histories, history)
+		}
+	}
+	return filtered
+}
+
+func historyPackageName(history *History) string {
+	if history.PackageName != "" {
+		return normalizePackageName(history.PackageName)
+	}
+	return relativePathToPackageName(history.Path)
+}
+
 func normalizePackageName(name string) string {
 	name = strings.TrimSuffix(name, "/")
 	if name == "" || name == "." {
