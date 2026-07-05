@@ -34,10 +34,16 @@ gotip
 
 While a test is selected, press <kbd>Enter</kbd> to run it using `go test`.
 
-To show only tests and histories from a specific package, use `--package`:
+To show only tests and histories from a package and its subpackages, use `--package`:
 
 ```
-gotip --package ./internal/parse
+gotip --package ./internal
+```
+
+You can also use Go-style package patterns:
+
+```
+gotip --package ./internal/...
 ```
 
 ### Passing additional arguments
@@ -79,6 +85,12 @@ gotip --rerun
 
 This will immediately execute the most recent test from your history.
 
+When used with `--package`, `--rerun` executes the most recent history entry that matches the package filter:
+
+```
+gotip --rerun --package ./internal/...
+```
+
 ### Listing discovered tests
 
 You can inspect the statically discovered test tree without opening the UI:
@@ -103,10 +115,17 @@ For machine-readable output, use JSON:
 gotip list --format=json
 ```
 
-To list tests from a specific package, use `--package`. Package matching is exact; `internal/parse` is treated as `./internal/parse`, but `./internal` does not match `./internal/parse`.
+To list tests from a package and its subpackages, use `--package`. `internal` is treated as `./internal`, and `./internal` matches packages such as `./internal/parse` and `./internal/tip`.
 
 ```
-gotip list --package ./internal/parse
+gotip list --package ./internal
+```
+
+Go-style package patterns are also supported:
+
+```
+gotip list --package ./internal/...
+gotip list --package ./...
 ```
 
 Example JSON output:
@@ -142,7 +161,7 @@ Usage:
 Application Options:
   -v, --view=[all|history]      Default view (default: all)
   -f, --filter=[fuzzy|exact]    Default filter type (default: fuzzy)
-  -p, --package=PACKAGE         Filter by package name
+  -p, --package=PACKAGE         Filter by package path or pattern
   -s, --skip-subtests           Skip subtest detection
   -r, --rerun                   Rerun the last test without showing the UI
   -V, --version                 Print version
@@ -161,7 +180,7 @@ Usage:
   gotip [OPTIONS] list [list-OPTIONS]
 
 [list command options]
-      -p, --package=PACKAGE       Filter by package name
+      -p, --package=PACKAGE       Filter by package path or pattern
       -s, --skip-subtests         Skip subtest detection
           --format=[text|json]    Output format (default: text)
 ```
