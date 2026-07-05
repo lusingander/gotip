@@ -132,11 +132,16 @@ func run(args []string) (int, error) {
 	}
 
 	if opt.Rerun {
-		if len(histories.Histories) == 0 {
-			fmt.Fprintln(os.Stderr, "No test history found.")
+		history := latestHistoryForRerun(histories, opt.Packages)
+		if history == nil {
+			if len(opt.Packages) > 0 {
+				fmt.Fprintln(os.Stderr, "No test history found for the specified package.")
+			} else {
+				fmt.Fprintln(os.Stderr, "No test history found.")
+			}
 			return 1, nil
 		}
-		code, err := command.Test(histories.Histories[0].ToTarget(), parsed.TestArgs, conf)
+		code, err := command.Test(history.ToTarget(), parsed.TestArgs, conf)
 		if err != nil {
 			return 1, err
 		}
@@ -169,4 +174,14 @@ func run(args []string) (int, error) {
 	}
 
 	return code, nil
+}
+
+func latestHistoryForRerun(histories *tip.Histories, packages []string) *tip.History {
+	if len(packages) > 0 {
+		histories = tip.FilterHistoriesByPackages(histories, packages)
+	}
+	if len(histories.Histories) == 0 {
+		return nil
+	}
+	return histories.Histories[0]
 }

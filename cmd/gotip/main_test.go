@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/lusingander/gotip/internal/tip"
+)
 
 func TestParseArgs_list(t *testing.T) {
 	got, err := parseArgs([]string{"gotip", "list", "--format=json", "--package=./internal/parse", "--skip-subtests"})
@@ -71,5 +75,75 @@ func TestParseArgs_defaultExecutionArgs(t *testing.T) {
 		if got.TestArgs[i] != wantArgs[i] {
 			t.Errorf("test arg %d = %q, want %q", i, got.TestArgs[i], wantArgs[i])
 		}
+	}
+}
+
+func TestLatestHistoryForRerun(t *testing.T) {
+	histories := &tip.Histories{
+		Histories: []*tip.History{
+			{
+				Path:            "./internal/tip/filter_test.go",
+				PackageName:     "./internal/tip",
+				TestNamePattern: "TestFilter",
+			},
+			{
+				Path:            "./cmd/gotip/main_test.go",
+				PackageName:     "./cmd/gotip",
+				TestNamePattern: "TestMain",
+			},
+		},
+	}
+
+	got := latestHistoryForRerun(histories, nil)
+
+	if got == nil {
+		t.Fatal("latestHistoryForRerun() = nil, want history")
+	}
+	if got.TestNamePattern != "TestFilter" {
+		t.Fatalf("latest history test name = %q, want %q", got.TestNamePattern, "TestFilter")
+	}
+}
+
+func TestLatestHistoryForRerun_filtersByPackage(t *testing.T) {
+	histories := &tip.Histories{
+		Histories: []*tip.History{
+			{
+				Path:            "./internal/tip/filter_test.go",
+				PackageName:     "./internal/tip",
+				TestNamePattern: "TestFilter",
+			},
+			{
+				Path:            "./cmd/gotip/main_test.go",
+				PackageName:     "./cmd/gotip",
+				TestNamePattern: "TestMain",
+			},
+		},
+	}
+
+	got := latestHistoryForRerun(histories, []string{"./cmd/..."})
+
+	if got == nil {
+		t.Fatal("latestHistoryForRerun() = nil, want history")
+	}
+	if got.TestNamePattern != "TestMain" {
+		t.Fatalf("latest history test name = %q, want %q", got.TestNamePattern, "TestMain")
+	}
+}
+
+func TestLatestHistoryForRerun_returnsNilWhenPackageDoesNotMatch(t *testing.T) {
+	histories := &tip.Histories{
+		Histories: []*tip.History{
+			{
+				Path:            "./internal/tip/filter_test.go",
+				PackageName:     "./internal/tip",
+				TestNamePattern: "TestFilter",
+			},
+		},
+	}
+
+	got := latestHistoryForRerun(histories, []string{"./cmd"})
+
+	if got != nil {
+		t.Fatalf("latestHistoryForRerun() = %+v, want nil", got)
 	}
 }
