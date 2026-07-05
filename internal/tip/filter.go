@@ -7,14 +7,11 @@ func FilterTestsByPackages(tests map[string][]*TestFunction, packages []string) 
 		return tests
 	}
 
-	packageSet := make(map[string]struct{}, len(packages))
-	for _, pkg := range packages {
-		packageSet[normalizePackageName(pkg)] = struct{}{}
-	}
+	matcher := newPackageMatcher(packages)
 
 	filtered := make(map[string][]*TestFunction)
 	for path, testFunctions := range tests {
-		if _, ok := packageSet[relativePathToPackageName(path)]; ok {
+		if matcher.match(relativePathToPackageName(path)) {
 			filtered[path] = testFunctions
 		}
 	}
@@ -26,17 +23,14 @@ func FilterHistoriesByPackages(histories *Histories, packages []string) *Histori
 		return histories
 	}
 
-	packageSet := make(map[string]struct{}, len(packages))
-	for _, pkg := range packages {
-		packageSet[normalizePackageName(pkg)] = struct{}{}
-	}
+	matcher := newPackageMatcher(packages)
 
 	filtered := &Histories{
 		ProjectDir: histories.ProjectDir,
 		Histories:  make([]*History, 0, len(histories.Histories)),
 	}
 	for _, history := range histories.Histories {
-		if _, ok := packageSet[historyPackageName(history)]; ok {
+		if matcher.match(historyPackageName(history)) {
 			filtered.Histories = append(filtered.Histories, history)
 		}
 	}
@@ -50,9 +44,59 @@ func historyPackageName(history *History) string {
 	return relativePathToPackageName(history.Path)
 }
 
+type packageMatcher struct {
+	patterns []string
+}
+
+func newPackageMatcher(packages []string) packageMatcher {
+	patterns := make([]string, 0, len(packages))
+	for _, pkg := range packages {
+		patterns = append(patterns, normalizePackagePattern(pkg))
+	}
+	return packageMatcher{patterns: patterns}
+}
+
+func (m packageMatcher) match(pkg string) bool {
+	pkg = normalizePackageName(pkg)
+	for _, pattern := range m.patterns {
+		if pattern == "./..." {
+			return true
+		}
+
+		if strings.HasSuffix(pattern, "/...") {
+			base := strings.TrimSuffix(pattern, "/...")
+			if packagePathContains(base, pkg) {
+				return true
+			}
+			continue
+		}
+
+		if packagePathContains(pattern, pkg) {
+			return true
+		}
+	}
+	return false
+}
+
+func packagePathContains(base, pkg string) bool {
+	return pkg == base || strings.HasPrefix(pkg, base+"/")
+}
+
+func normalizePackagePattern(name string) string {
+	name = strings.TrimSuffix(name, "/")
+	if strings.HasSuffix(name, "/...") {
+		base := normalizePackageName(strings.TrimSuffix(name, "/..."))
+		if base == "." {
+			return "./..."
+		}
+		return base + "/..."
+	}
+	return normalizePackageName(name)
+}
+
 func normalizePackageName(name string) string {
 	name = strings.TrimSuffix(name, "/")
-	if name == "" || name == "." {
+	if name == "" || name == "." || name == "./." {
 		return "."
 	}
 	if !strings.HasPrefix(name, "./") {

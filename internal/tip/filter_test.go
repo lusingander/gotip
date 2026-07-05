@@ -42,17 +42,84 @@ func TestFilterTestsByPackages_normalizesPackageNames(t *testing.T) {
 	}
 }
 
-func TestFilterTestsByPackages_requiresExactMatch(t *testing.T) {
+func TestFilterTestsByPackages_includesSubpackages(t *testing.T) {
 	tests := map[string][]*TestFunction{
 		"./internal/parse/parse_test.go": {
 			{Name: "TestParse"},
+		},
+		"./internal/tip/model_test.go": {
+			{Name: "TestTarget"},
+		},
+		"./internalx/x_test.go": {
+			{Name: "TestX"},
 		},
 	}
 
 	got := FilterTestsByPackages(tests, []string{"./internal"})
 
-	if len(got) != 0 {
-		t.Fatalf("filtered tests len = %d, want 0", len(got))
+	if len(got) != 2 {
+		t.Fatalf("filtered tests len = %d, want 2", len(got))
+	}
+	if _, ok := got["./internal/parse/parse_test.go"]; !ok {
+		t.Fatal("filtered tests does not contain ./internal/parse/parse_test.go")
+	}
+	if _, ok := got["./internal/tip/model_test.go"]; !ok {
+		t.Fatal("filtered tests does not contain ./internal/tip/model_test.go")
+	}
+	if _, ok := got["./internalx/x_test.go"]; ok {
+		t.Fatal("filtered tests contains ./internalx/x_test.go")
+	}
+}
+
+func TestFilterTestsByPackages_supportsGoStylePackagePattern(t *testing.T) {
+	tests := map[string][]*TestFunction{
+		"./internal/parse/parse_test.go": {
+			{Name: "TestParse"},
+		},
+		"./internal/tip/model_test.go": {
+			{Name: "TestTarget"},
+		},
+		"./cmd/gotip/main_test.go": {
+			{Name: "TestMain"},
+		},
+	}
+
+	got := FilterTestsByPackages(tests, []string{"internal/..."})
+
+	if len(got) != 2 {
+		t.Fatalf("filtered tests len = %d, want 2", len(got))
+	}
+	if _, ok := got["./internal/parse/parse_test.go"]; !ok {
+		t.Fatal("filtered tests does not contain ./internal/parse/parse_test.go")
+	}
+	if _, ok := got["./internal/tip/model_test.go"]; !ok {
+		t.Fatal("filtered tests does not contain ./internal/tip/model_test.go")
+	}
+	if _, ok := got["./cmd/gotip/main_test.go"]; ok {
+		t.Fatal("filtered tests contains ./cmd/gotip/main_test.go")
+	}
+}
+
+func TestFilterTestsByPackages_allPackagePatternReturnsAllTests(t *testing.T) {
+	tests := map[string][]*TestFunction{
+		"./internal/parse/parse_test.go": {
+			{Name: "TestParse"},
+		},
+		"./main_test.go": {
+			{Name: "TestMain"},
+		},
+	}
+
+	got := FilterTestsByPackages(tests, []string{"./..."})
+
+	if len(got) != len(tests) {
+		t.Fatalf("filtered tests len = %d, want %d", len(got), len(tests))
+	}
+	if _, ok := got["./internal/parse/parse_test.go"]; !ok {
+		t.Fatal("filtered tests does not contain ./internal/parse/parse_test.go")
+	}
+	if _, ok := got["./main_test.go"]; !ok {
+		t.Fatal("filtered tests does not contain ./main_test.go")
 	}
 }
 
@@ -106,7 +173,7 @@ func TestFilterHistoriesByPackages(t *testing.T) {
 	}
 }
 
-func TestFilterHistoriesByPackages_requiresExactMatch(t *testing.T) {
+func TestFilterHistoriesByPackages_includesSubpackages(t *testing.T) {
 	histories := &Histories{
 		Histories: []*History{
 			{
@@ -114,13 +181,47 @@ func TestFilterHistoriesByPackages_requiresExactMatch(t *testing.T) {
 				PackageName:     "./internal/parse",
 				TestNamePattern: "TestParse",
 			},
+			{
+				Path:            "./internalx/x_test.go",
+				PackageName:     "./internalx",
+				TestNamePattern: "TestX",
+			},
 		},
 	}
 
 	got := FilterHistoriesByPackages(histories, []string{"./internal"})
 
-	if len(got.Histories) != 0 {
-		t.Fatalf("filtered histories len = %d, want 0", len(got.Histories))
+	if len(got.Histories) != 1 {
+		t.Fatalf("filtered histories len = %d, want 1", len(got.Histories))
+	}
+	if got.Histories[0].TestNamePattern != "TestParse" {
+		t.Fatalf("filtered history test name = %q, want %q", got.Histories[0].TestNamePattern, "TestParse")
+	}
+}
+
+func TestFilterHistoriesByPackages_supportsGoStylePackagePattern(t *testing.T) {
+	histories := &Histories{
+		Histories: []*History{
+			{
+				Path:            "./internal/parse/parse_test.go",
+				PackageName:     "./internal/parse",
+				TestNamePattern: "TestParse",
+			},
+			{
+				Path:            "./cmd/gotip/main_test.go",
+				PackageName:     "./cmd/gotip",
+				TestNamePattern: "TestMain",
+			},
+		},
+	}
+
+	got := FilterHistoriesByPackages(histories, []string{"./internal/..."})
+
+	if len(got.Histories) != 1 {
+		t.Fatalf("filtered histories len = %d, want 1", len(got.Histories))
+	}
+	if got.Histories[0].TestNamePattern != "TestParse" {
+		t.Fatalf("filtered history test name = %q, want %q", got.Histories[0].TestNamePattern, "TestParse")
 	}
 }
 
