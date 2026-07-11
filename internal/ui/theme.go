@@ -35,3 +35,49 @@ func DefaultColorTheme() ColorTheme {
 		ListDimmedDesc:  lipgloss.Color("#4D4D4D"),
 	}
 }
+
+type appStyles struct {
+	selectedLabel       lipgloss.Style
+	selectedName        lipgloss.Style
+	selectedPath        lipgloss.Style
+	header              lipgloss.Style
+	footerMsg           lipgloss.Style
+	footerFiltered      lipgloss.Style
+	footerSelectedIndex lipgloss.Style
+	footerDivider       lipgloss.Style
+	footer              lipgloss.Style
+	helpHeader          lipgloss.Style
+	helpContent         lipgloss.Style
+	helpKey             lipgloss.Style
+	filterPrompt        lipgloss.Style
+	filterCursor        lipgloss.Style
+}
+
+func newAppStyles(theme ColorTheme) appStyles {
+	return appStyles{
+		selectedLabel: lipgloss.NewStyle().Foreground(theme.Selected),
+		selectedName:  lipgloss.NewStyle().Foreground(theme.Selected).Bold(true),
+		selectedPath:  lipgloss.NewStyle().Foreground(theme.Selected).Bold(true),
+
+		header: lipgloss.NewStyle().
+			Padding(0, 2).
+			Border(lipgloss.NormalBorder(), false, false, true, false).
+			BorderForeground(theme.Border),
+
+		footerMsg:           lipgloss.NewStyle(),
+		footerFiltered:      lipgloss.NewStyle(),
+		footerSelectedIndex: lipgloss.NewStyle(),
+		footerDivider:       lipgloss.NewStyle().Foreground(theme.Border),
+
+		footer: lipgloss.NewStyle().
+			Padding(0, 1).
+			Border(lipgloss.NormalBorder(), true, false, false, false).
+			BorderForeground(theme.Border),
+
+		helpHeader:   lipgloss.NewStyle().Foreground(theme.HelpHeader),
+		helpContent:  lipgloss.NewStyle().Padding(0, 2),
+		helpKey:      lipgloss.NewStyle().Foreground(theme.HelpKey).Bold(true),
+		filterPrompt: lipgloss.NewStyle(),
+		filterCursor: lipgloss.NewStyle().Foreground(theme.Cursor),
+	}
+}

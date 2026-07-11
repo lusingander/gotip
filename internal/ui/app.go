@@ -13,41 +13,6 @@ import (
 	"github.com/lusingander/gotip/internal/tip"
 )
 
-var (
-	selectedColor = lipgloss.Color("#00ADD8")
-	cursorColor   = lipgloss.Color("#00ADD8")
-	borderColor   = lipgloss.Color("240")
-
-	helpHeaderColor = lipgloss.Color("#00ADD8")
-	helpKeyColor    = lipgloss.Color("#5DC9E2")
-)
-
-var (
-	selectedLabelStyle = lipgloss.NewStyle().Foreground(selectedColor)
-	selectedNameStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
-	selectedPathStyle  = lipgloss.NewStyle().Foreground(selectedColor).Bold(true)
-
-	headerStyle = lipgloss.NewStyle().
-			Padding(0, 2).
-			Border(lipgloss.NormalBorder(), false, false, true, false).
-			BorderForeground(borderColor)
-
-	footerMsgStyle           = lipgloss.NewStyle()
-	footerFilteredStyle      = lipgloss.NewStyle()
-	footerSelectedIndexStyle = lipgloss.NewStyle()
-	footerDividerStyle       = lipgloss.NewStyle().Foreground(borderColor)
-
-	footerStyle = lipgloss.NewStyle().
-			Padding(0, 1).
-			Border(lipgloss.NormalBorder(), true, false, false, false).
-			BorderForeground(borderColor)
-
-	helpHeaderStyle = lipgloss.NewStyle().Foreground(helpHeaderColor)
-
-	helpContentStyle = lipgloss.NewStyle().Padding(0, 2)
-	helpKeyStyle     = lipgloss.NewStyle().Foreground(helpKeyColor).Bold(true)
-)
-
 type view int
 
 const (
@@ -77,6 +42,7 @@ const (
 type model struct {
 	allList         list.Model
 	historyList     list.Model
+	styles          appStyles
 	currentView     view
 	showHelp        bool
 	helpOffset      int
@@ -90,12 +56,14 @@ type model struct {
 	retTarget             *tip.Target
 }
 
-func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultFilterType matchFilterType) model {
-	allList := newList(allTestItems, testCaseItemDelegate{}, defaultFilterType)
-	historyList := newList(historyItems, historyItemDelegate{}, defaultFilterType)
+func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultFilterType matchFilterType, theme ColorTheme) model {
+	styles := newAppStyles(theme)
+	allList := newList(allTestItems, testCaseItemDelegate{}, defaultFilterType, styles)
+	historyList := newList(historyItems, historyItemDelegate{}, defaultFilterType, styles)
 	return model{
 		allList:               allList,
 		historyList:           historyList,
+		styles:                styles,
 		currentView:           defaultView,
 		showHelp:              false,
 		helpOffset:            0,
@@ -108,7 +76,7 @@ func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultF
 	}
 }
 
-func newList(items []list.Item, delegate list.ItemDelegate, defaultFilterType matchFilterType) list.Model {
+func newList(items []list.Item, delegate list.ItemDelegate, defaultFilterType matchFilterType, styles appStyles) list.Model {
 	l := list.New(items, delegate, 0, 0)
 	l.SetShowTitle(false)
 	l.SetShowFilter(false)
@@ -116,8 +84,8 @@ func newList(items []list.Item, delegate list.ItemDelegate, defaultFilterType ma
 	l.SetShowHelp(false)
 	l.SetShowPagination(false)
 	l.FilterInput.Prompt = "Filtering: "
-	l.FilterInput.PromptStyle = lipgloss.NewStyle()
-	l.FilterInput.Cursor.Style = lipgloss.NewStyle().Foreground(cursorColor)
+	l.FilterInput.PromptStyle = styles.filterPrompt
+	l.FilterInput.Cursor.Style = styles.filterCursor
 	switch defaultFilterType {
 	case fuzzyMatchFilterType:
 		l.Filter = fuzzyMatchFilter
@@ -296,23 +264,23 @@ func (m model) View() string {
 	var headerContent string
 	if m.tmpTarget != nil {
 		selectedLabel := "Selected: "
-		selectedNameWidth := m.w - headerStyle.GetHorizontalFrameSize() - lipgloss.Width(selectedLabel)
+		selectedNameWidth := m.w - m.styles.header.GetHorizontalFrameSize() - lipgloss.Width(selectedLabel)
 		if m.tmpTarget.IsPrefix {
 			selectedNameWidth -= lipgloss.Width("*")
 		}
 		selectedName := ansi.Truncate(m.tmpTarget.TestNamePattern, selectedNameWidth, ellipsis)
 
-		name := selectedLabelStyle.Render(selectedLabel) + selectedNameStyle.Render(selectedName)
+		name := m.styles.selectedLabel.Render(selectedLabel) + m.styles.selectedName.Render(selectedName)
 		if m.tmpTarget.IsPrefix {
-			name += selectedLabelStyle.Render("*")
+			name += m.styles.selectedLabel.Render("*")
 		}
-		pack := selectedLabelStyle.Render(" Package: ") + selectedPathStyle.Render(m.tmpTarget.PackageName)
+		pack := m.styles.selectedLabel.Render(" Package: ") + m.styles.selectedPath.Render(m.tmpTarget.PackageName)
 		headerContent = name + "\n" + pack
 	} else {
 		headerContent = "\n"
 	}
 
-	header := headerStyle.Width(m.w).Render(headerContent)
+	header := m.styles.header.Width(m.w).Render(headerContent)
 
 	var footerStatus string
 	switch m.statusMsgType {
@@ -321,43 +289,43 @@ func (m model) View() string {
 		case list.Filtering:
 			footerStatus = strings.TrimRight(currentList.FilterInput.View(), " ")
 		case list.FilterApplied:
-			footerStatus = footerFilteredStyle.
+			footerStatus = m.styles.footerFiltered.
 				Render(fmt.Sprintf("Filtered: %d items [Query: %s]", len(currentList.VisibleItems()), currentList.FilterValue()))
 		}
 	case fuzzyMatchFilteredStatusMsgType:
-		footerStatus = footerMsgStyle.
+		footerStatus = m.styles.footerMsg.
 			Render("Filter mode: Fuzzy match")
 	case exactMatchFilteredStatusMsgType:
-		footerStatus = footerMsgStyle.
+		footerStatus = m.styles.footerMsg.
 			Render("Filter mode: Exact match")
 	}
 
 	var footerSelectedIndex string
 	if len(currentList.VisibleItems()) > 0 {
-		footerSelectedIndex = footerSelectedIndexStyle.
+		footerSelectedIndex = m.styles.footerSelectedIndex.
 			Render(fmt.Sprintf("%d / %d", currentList.Index()+1, len(currentList.VisibleItems())))
 	}
 
 	var footerView string
 	switch m.currentView {
 	case allView:
-		footerView = footerDividerStyle.Render(" | ") + footerMsgStyle.Render("All Tests")
+		footerView = m.styles.footerDivider.Render(" | ") + m.styles.footerMsg.Render("All Tests")
 	case historyView:
-		footerView = footerDividerStyle.Render(" | ") + footerMsgStyle.Render("History  ")
+		footerView = m.styles.footerDivider.Render(" | ") + m.styles.footerMsg.Render("History  ")
 	}
 
 	footerSpaceWidth := max(m.w-lipgloss.Width(footerStatus)-lipgloss.Width(footerSelectedIndex)-lipgloss.Width(footerView)-2 /* padding */, 0)
 	footerSpace := strings.Repeat(" ", footerSpaceWidth)
 
-	footer := footerStyle.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex + footerView)
+	footer := m.styles.footer.Width(m.w).Render(footerStatus + footerSpace + footerSelectedIndex + footerView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, currentList.View(), footer)
 }
 
 func (m model) helpView() string {
-	headerProgramName := helpHeaderStyle.Render(tip.ProgramName)
-	headerVersion := helpHeaderStyle.Render("Version: " + tip.AppVersion)
-	header := headerStyle.Width(m.w).Render(headerProgramName + "\n" + headerVersion)
+	headerProgramName := m.styles.helpHeader.Render(tip.ProgramName)
+	headerVersion := m.styles.helpHeader.Render("Version: " + tip.AppVersion)
+	header := m.styles.header.Width(m.w).Render(headerProgramName + "\n" + headerVersion)
 
 	contentHeight := m.h - 5
 	keyLines := []string{}
@@ -365,7 +333,7 @@ func (m model) helpView() string {
 	for _, h := range helpItems() {
 		keys := make([]string, 0, len(h.keys))
 		for _, k := range h.keys {
-			keys = append(keys, "<"+helpKeyStyle.Render(k)+">")
+			keys = append(keys, "<"+m.styles.helpKey.Render(k)+">")
 		}
 		keyLine := strings.Join(keys, ", ") + " : "
 		keyLines = append(keyLines, keyLine)
@@ -387,14 +355,14 @@ func (m model) helpView() string {
 	}
 
 	padLines := strings.Repeat("\n", contentHeight-len(lines))
-	content := helpContentStyle.Render(strings.Join(lines, "\n") + padLines)
+	content := m.styles.helpContent.Render(strings.Join(lines, "\n") + padLines)
 
-	footerView := footerDividerStyle.Render(" | ") + footerMsgStyle.Render("Help     ")
+	footerView := m.styles.footerDivider.Render(" | ") + m.styles.footerMsg.Render("Help     ")
 
 	footerSpaceWidth := max(m.w-lipgloss.Width(footerView)-2 /* padding */, 0)
 	footerSpace := strings.Repeat(" ", footerSpaceWidth)
 
-	footer := footerStyle.Width(m.w).Render(footerSpace + footerView)
+	footer := m.styles.footer.Width(m.w).Render(footerSpace + footerView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
 }
@@ -432,7 +400,7 @@ func Start(
 	historyItems := toHistoryItems(histories, conf.History.DateFormat)
 	defaultView := viewFromStr(defaultViewStr)
 	defaultFilterType := matchFilterTypeFromStr(defaultFilterTypeStr)
-	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType)
+	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType, DefaultColorTheme())
 	p := tea.NewProgram(
 		m,
 		tea.WithAltScreen(),
