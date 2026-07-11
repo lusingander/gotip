@@ -58,8 +58,9 @@ type model struct {
 
 func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultFilterType matchFilterType, theme ColorTheme) model {
 	styles := newAppStyles(theme)
-	allList := newList(allTestItems, testCaseItemDelegate{}, defaultFilterType, styles)
-	historyList := newList(historyItems, historyItemDelegate{}, defaultFilterType, styles)
+	listStyles := newListStyles(theme)
+	allList := newList(allTestItems, testCaseItemDelegate{styles: listStyles}, defaultFilterType, styles)
+	historyList := newList(historyItems, historyItemDelegate{styles: listStyles}, defaultFilterType, styles)
 	return model{
 		allList:               allList,
 		historyList:           historyList,

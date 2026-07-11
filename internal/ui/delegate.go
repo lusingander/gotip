@@ -10,45 +10,13 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-var (
-	listNormalTitleColor = lipgloss.Color("#dddddd")
-	listNormalDescColor  = lipgloss.Color("#777777")
-	listSelectedColor    = lipgloss.Color("#5DC9E2")
-	listMatchedColor     = lipgloss.Color("#CE3262")
-	listDimmedTitleColor = lipgloss.Color("#777777")
-	listDimmedDescColor  = lipgloss.Color("#4D4D4D")
-)
-
-var (
-	listNormalTitleStyle = lipgloss.NewStyle().
-				Foreground(listNormalTitleColor).
-				Padding(0, 0, 0, 2)
-
-	listNormalDescStyle = listNormalTitleStyle.
-				Foreground(listNormalDescColor)
-
-	listSelectedTitleStyle = lipgloss.NewStyle().
-				Border(lipgloss.NormalBorder(), false, false, false, true).
-				BorderForeground(listSelectedColor).
-				Foreground(listSelectedColor).
-				Padding(0, 0, 0, 1)
-
-	listSelectedDescStyle = listSelectedTitleStyle.
-				Foreground(listSelectedColor)
-
-	listDimmedTitleStyle = lipgloss.NewStyle().
-				Foreground(listDimmedTitleColor).
-				Padding(0, 0, 0, 2)
-
-	listDimmedDescStyle = listDimmedTitleStyle.
-				Foreground(listDimmedDescColor)
-)
-
 const (
 	ellipsis = "..."
 )
 
-type testCaseItemDelegate struct{}
+type testCaseItemDelegate struct {
+	styles listStyles
+}
 
 func (d testCaseItemDelegate) Height() int {
 	return 2
@@ -71,7 +39,7 @@ func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item 
 		return
 	}
 
-	textwidth := m.Width() - listNormalTitleStyle.GetPaddingLeft() - listNormalTitleStyle.GetPaddingRight()
+	textwidth := m.Width() - d.styles.normalTitle.GetPaddingLeft() - d.styles.normalTitle.GetPaddingRight()
 	title = ansi.Truncate(title, textwidth, ellipsis)
 	desc = ansi.Truncate(desc, textwidth, ellipsis)
 
@@ -87,34 +55,34 @@ func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item 
 	}
 
 	if emptyFilter {
-		title = listDimmedTitleStyle.Render(title)
-		desc = listDimmedDescStyle.Render(desc)
+		title = d.styles.dimmedTitle.Render(title)
+		desc = d.styles.dimmedDesc.Render(desc)
 	} else {
 		if isSelected && m.FilterState() != list.Filtering {
 			if isFiltered {
-				unmatched := listSelectedTitleStyle.Inline(true)
-				matched := unmatched.Foreground(listMatchedColor)
+				unmatched := d.styles.selectedTitle.Inline(true)
+				matched := unmatched.Foreground(d.styles.matchedColor)
 				title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
 			}
-			title = listSelectedTitleStyle.Render(title)
-			desc = listSelectedDescStyle.Render(desc)
+			title = d.styles.selectedTitle.Render(title)
+			desc = d.styles.selectedDesc.Render(desc)
 		} else {
 			if m.FilterState() == list.Filtering {
 				if isFiltered {
-					unmatched := listDimmedTitleStyle.Inline(true)
-					matched := unmatched.Foreground(listMatchedColor)
+					unmatched := d.styles.dimmedTitle.Inline(true)
+					matched := unmatched.Foreground(d.styles.matchedColor)
 					title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
 				}
-				title = listDimmedTitleStyle.Render(title)
-				desc = listDimmedDescStyle.Render(desc)
+				title = d.styles.dimmedTitle.Render(title)
+				desc = d.styles.dimmedDesc.Render(desc)
 			} else {
 				if isFiltered {
-					unmatched := listNormalTitleStyle.Inline(true)
-					matched := unmatched.Foreground(listMatchedColor)
+					unmatched := d.styles.normalTitle.Inline(true)
+					matched := unmatched.Foreground(d.styles.matchedColor)
 					title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
 				}
-				title = listNormalTitleStyle.Render(title)
-				desc = listNormalDescStyle.Render(desc)
+				title = d.styles.normalTitle.Render(title)
+				desc = d.styles.normalDesc.Render(desc)
 			}
 		}
 	}
@@ -122,7 +90,9 @@ func (d testCaseItemDelegate) Render(w io.Writer, m list.Model, index int, item 
 	fmt.Fprintf(w, "%s\n%s", title, desc)
 }
 
-type historyItemDelegate struct{}
+type historyItemDelegate struct {
+	styles listStyles
+}
 
 func (d historyItemDelegate) Height() int {
 	return 3
@@ -146,7 +116,7 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 		return
 	}
 
-	textwidth := m.Width() - listNormalTitleStyle.GetPaddingLeft() - listNormalTitleStyle.GetPaddingRight()
+	textwidth := m.Width() - d.styles.normalTitle.GetPaddingLeft() - d.styles.normalTitle.GetPaddingRight()
 	title = ansi.Truncate(title, textwidth, ellipsis)
 	desc = ansi.Truncate(desc, textwidth, ellipsis)
 	runAt = ansi.Truncate(runAt, textwidth, ellipsis)
@@ -163,38 +133,38 @@ func (d historyItemDelegate) Render(w io.Writer, m list.Model, index int, item l
 	}
 
 	if emptyFilter {
-		title = listDimmedTitleStyle.Render(title)
-		desc = listDimmedDescStyle.Render(desc)
-		runAt = listDimmedDescStyle.Render(runAt)
+		title = d.styles.dimmedTitle.Render(title)
+		desc = d.styles.dimmedDesc.Render(desc)
+		runAt = d.styles.dimmedDesc.Render(runAt)
 	} else {
 		if isSelected && m.FilterState() != list.Filtering {
 			if isFiltered {
-				unmatched := listSelectedTitleStyle.Inline(true)
-				matched := unmatched.Foreground(listMatchedColor)
+				unmatched := d.styles.selectedTitle.Inline(true)
+				matched := unmatched.Foreground(d.styles.matchedColor)
 				title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
 			}
-			title = listSelectedTitleStyle.Render(title)
-			desc = listSelectedDescStyle.Render(desc)
-			runAt = listSelectedDescStyle.Render(runAt)
+			title = d.styles.selectedTitle.Render(title)
+			desc = d.styles.selectedDesc.Render(desc)
+			runAt = d.styles.selectedDesc.Render(runAt)
 		} else {
 			if m.FilterState() == list.Filtering {
 				if isFiltered {
-					unmatched := listDimmedTitleStyle.Inline(true)
-					matched := unmatched.Foreground(listMatchedColor)
+					unmatched := d.styles.dimmedTitle.Inline(true)
+					matched := unmatched.Foreground(d.styles.matchedColor)
 					title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
 				}
-				title = listDimmedTitleStyle.Render(title)
-				desc = listDimmedDescStyle.Render(desc)
-				runAt = listDimmedDescStyle.Render(runAt)
+				title = d.styles.dimmedTitle.Render(title)
+				desc = d.styles.dimmedDesc.Render(desc)
+				runAt = d.styles.dimmedDesc.Render(runAt)
 			} else {
 				if isFiltered {
-					unmatched := listNormalTitleStyle.Inline(true)
-					matched := unmatched.Foreground(listMatchedColor)
+					unmatched := d.styles.normalTitle.Inline(true)
+					matched := unmatched.Foreground(d.styles.matchedColor)
 					title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
 				}
-				title = listNormalTitleStyle.Render(title)
-				desc = listNormalDescStyle.Render(desc)
-				runAt = listNormalDescStyle.Render(runAt)
+				title = d.styles.normalTitle.Render(title)
+				desc = d.styles.normalDesc.Render(desc)
+				runAt = d.styles.normalDesc.Render(runAt)
 			}
 		}
 	}

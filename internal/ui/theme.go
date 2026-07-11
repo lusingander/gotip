@@ -81,3 +81,48 @@ func newAppStyles(theme ColorTheme) appStyles {
 		filterCursor: lipgloss.NewStyle().Foreground(theme.Cursor),
 	}
 }
+
+type listStyles struct {
+	normalTitle   lipgloss.Style
+	normalDesc    lipgloss.Style
+	selectedTitle lipgloss.Style
+	selectedDesc  lipgloss.Style
+	dimmedTitle   lipgloss.Style
+	dimmedDesc    lipgloss.Style
+	matchedColor  lipgloss.Color
+}
+
+func newListStyles(theme ColorTheme) listStyles {
+	normalTitle := lipgloss.NewStyle().
+		Foreground(theme.ListNormalTitle).
+		Padding(0, 0, 0, 2)
+
+	normalDesc := normalTitle.
+		Foreground(theme.ListNormalDesc)
+
+	selectedTitle := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), false, false, false, true).
+		BorderForeground(theme.ListSelected).
+		Foreground(theme.ListSelected).
+		Padding(0, 0, 0, 1)
+
+	selectedDesc := selectedTitle.
+		Foreground(theme.ListSelected)
+
+	dimmedTitle := lipgloss.NewStyle().
+		Foreground(theme.ListDimmedTitle).
+		Padding(0, 0, 0, 2)
+
+	dimmedDesc := dimmedTitle.
+		Foreground(theme.ListDimmedDesc)
+
+	return listStyles{
+		normalTitle:   normalTitle,
+		normalDesc:    normalDesc,
+		selectedTitle: selectedTitle,
+		selectedDesc:  selectedDesc,
+		dimmedTitle:   dimmedTitle,
+		dimmedDesc:    dimmedDesc,
+		matchedColor:  theme.ListMatched,
+	}
+}
