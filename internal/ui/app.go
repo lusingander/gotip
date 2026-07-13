@@ -369,11 +369,6 @@ func (m model) helpView() string {
 	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
 }
 
-func trimRightSpace(s string) string {
-	width := lipgloss.Width(strings.TrimRight(ansi.Strip(s), " "))
-	return ansi.Truncate(s, width, "")
-}
-
 type helpItem struct {
 	keys []string
 	desc string
