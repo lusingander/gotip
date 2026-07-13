@@ -289,7 +289,7 @@ func (m model) View() string {
 	case noneStatusMsgType:
 		switch currentList.FilterState() {
 		case list.Filtering:
-			footerStatus = strings.TrimRight(currentList.FilterInput.View(), " ")
+			footerStatus = trimRightSpace(currentList.FilterInput.View())
 		case list.FilterApplied:
 			footerStatus = m.styles.footerFiltered.
 				Render(fmt.Sprintf("Filtered: %d items [Query: %s]", len(currentList.VisibleItems()), currentList.FilterValue()))
@@ -335,11 +335,11 @@ func (m model) helpView() string {
 	for _, h := range helpItems() {
 		keys := make([]string, 0, len(h.keys))
 		for _, k := range h.keys {
-			keys = append(keys, "<"+m.styles.helpKey.Render(k)+">")
+			keys = append(keys, m.styles.helpText.Render("<")+m.styles.helpKey.Render(k)+m.styles.helpText.Render(">"))
 		}
-		keyLine := strings.Join(keys, ", ") + " : "
+		keyLine := strings.Join(keys, m.styles.helpText.Render(", ")) + m.styles.helpText.Render(" : ")
 		keyLines = append(keyLines, keyLine)
-		descLines = append(descLines, h.desc)
+		descLines = append(descLines, m.styles.helpText.Render(h.desc))
 	}
 	linesJoined := lipgloss.JoinHorizontal(lipgloss.Top,
 		lipgloss.JoinVertical(lipgloss.Right, keyLines...),
@@ -367,6 +367,11 @@ func (m model) helpView() string {
 	footer := m.styles.footer.Width(m.w).Render(footerSpace + footerView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
+}
+
+func trimRightSpace(s string) string {
+	width := lipgloss.Width(strings.TrimRight(ansi.Strip(s), " "))
+	return ansi.Truncate(s, width, "")
 }
 
 type helpItem struct {

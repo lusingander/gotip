@@ -50,6 +50,7 @@ type appStyles struct {
 	footer              lipgloss.Style
 	helpHeader          lipgloss.Style
 	helpContent         lipgloss.Style
+	helpText            lipgloss.Style
 	helpKey             lipgloss.Style
 	filterPrompt        lipgloss.Style
 	filterText          lipgloss.Style
@@ -78,7 +79,8 @@ func newAppStyles(theme ColorTheme) appStyles {
 			BorderForeground(theme.Border),
 
 		helpHeader:   lipgloss.NewStyle().Foreground(theme.HelpHeader),
-		helpContent:  lipgloss.NewStyle().Foreground(theme.Normal).Padding(0, 2),
+		helpContent:  lipgloss.NewStyle().Padding(0, 2),
+		helpText:     lipgloss.NewStyle().Foreground(theme.Normal),
 		helpKey:      lipgloss.NewStyle().Foreground(theme.HelpKey).Bold(true),
 		filterPrompt: lipgloss.NewStyle().Foreground(theme.Normal),
 		filterText:   lipgloss.NewStyle().Foreground(theme.Normal),
