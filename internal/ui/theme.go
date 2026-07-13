@@ -3,6 +3,7 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 type ColorTheme struct {
+	Normal   lipgloss.Color
 	Selected lipgloss.Color
 	Cursor   lipgloss.Color
 	Border   lipgloss.Color
@@ -20,6 +21,7 @@ type ColorTheme struct {
 
 func DefaultColorTheme() ColorTheme {
 	return ColorTheme{
+		Normal:   lipgloss.Color("#dddddd"),
 		Selected: lipgloss.Color("#00ADD8"),
 		Cursor:   lipgloss.Color("#00ADD8"),
 		Border:   lipgloss.Color("240"),
