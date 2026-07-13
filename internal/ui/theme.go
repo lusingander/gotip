@@ -52,6 +52,7 @@ type appStyles struct {
 	helpContent         lipgloss.Style
 	helpKey             lipgloss.Style
 	filterPrompt        lipgloss.Style
+	filterText          lipgloss.Style
 	filterCursor        lipgloss.Style
 }
 
@@ -66,9 +67,9 @@ func newAppStyles(theme ColorTheme) appStyles {
 			Border(lipgloss.NormalBorder(), false, false, true, false).
 			BorderForeground(theme.Border),
 
-		footerMsg:           lipgloss.NewStyle(),
-		footerFiltered:      lipgloss.NewStyle(),
-		footerSelectedIndex: lipgloss.NewStyle(),
+		footerMsg:           lipgloss.NewStyle().Foreground(theme.Normal),
+		footerFiltered:      lipgloss.NewStyle().Foreground(theme.Normal),
+		footerSelectedIndex: lipgloss.NewStyle().Foreground(theme.Normal),
 		footerDivider:       lipgloss.NewStyle().Foreground(theme.Border),
 
 		footer: lipgloss.NewStyle().
@@ -77,9 +78,10 @@ func newAppStyles(theme ColorTheme) appStyles {
 			BorderForeground(theme.Border),
 
 		helpHeader:   lipgloss.NewStyle().Foreground(theme.HelpHeader),
-		helpContent:  lipgloss.NewStyle().Padding(0, 2),
+		helpContent:  lipgloss.NewStyle().Foreground(theme.Normal).Padding(0, 2),
 		helpKey:      lipgloss.NewStyle().Foreground(theme.HelpKey).Bold(true),
-		filterPrompt: lipgloss.NewStyle(),
+		filterPrompt: lipgloss.NewStyle().Foreground(theme.Normal),
+		filterText:   lipgloss.NewStyle().Foreground(theme.Normal),
 		filterCursor: lipgloss.NewStyle().Foreground(theme.Cursor),
 	}
 }

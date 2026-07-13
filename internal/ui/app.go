@@ -86,6 +86,7 @@ func newList(items []list.Item, delegate list.ItemDelegate, defaultFilterType ma
 	l.SetShowPagination(false)
 	l.FilterInput.Prompt = "Filtering: "
 	l.FilterInput.PromptStyle = styles.filterPrompt
+	l.FilterInput.TextStyle = styles.filterText
 	l.FilterInput.Cursor.Style = styles.filterCursor
 	switch defaultFilterType {
 	case fuzzyMatchFilterType:
