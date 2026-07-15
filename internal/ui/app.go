@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
+	"github.com/lusingander/gotip/internal/theme"
 	"github.com/lusingander/gotip/internal/tip"
 )
 
@@ -56,9 +57,9 @@ type model struct {
 	retTarget             *tip.Target
 }
 
-func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultFilterType matchFilterType, theme ColorTheme) model {
-	styles := newAppStyles(theme)
-	listStyles := newListStyles(theme)
+func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultFilterType matchFilterType, colorTheme theme.ColorTheme) model {
+	styles := newAppStyles(colorTheme)
+	listStyles := newListStyles(colorTheme)
 	allList := newList(allTestItems, testCaseItemDelegate{styles: listStyles}, defaultFilterType, styles)
 	historyList := newList(historyItems, historyItemDelegate{styles: listStyles}, defaultFilterType, styles)
 	return model{
@@ -397,12 +398,13 @@ func Start(
 	conf *tip.Config,
 	defaultViewStr string,
 	defaultFilterTypeStr string,
+	colorTheme theme.ColorTheme,
 ) (*tip.Target, error) {
 	allTestItems := toTestCaseItems(tests)
 	historyItems := toHistoryItems(histories, conf.History.DateFormat)
 	defaultView := viewFromStr(defaultViewStr)
 	defaultFilterType := matchFilterTypeFromStr(defaultFilterTypeStr)
-	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType, DefaultColorTheme())
+	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType, colorTheme)
 	p := tea.NewProgram(
 		m,
 		tea.WithAltScreen(),

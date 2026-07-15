@@ -10,6 +10,7 @@ import (
 	"github.com/lusingander/gotip/internal/command"
 	"github.com/lusingander/gotip/internal/listfmt"
 	"github.com/lusingander/gotip/internal/parse"
+	"github.com/lusingander/gotip/internal/theme"
 	"github.com/lusingander/gotip/internal/tip"
 	"github.com/lusingander/gotip/internal/ui"
 )
@@ -100,6 +101,7 @@ func run(args []string) (int, error) {
 	if err != nil {
 		return 1, err
 	}
+	colorTheme := theme.DefaultColorTheme()
 
 	if parsed.Command == "list" {
 		if len(parsed.TestArgs) > 0 {
@@ -141,7 +143,7 @@ func run(args []string) (int, error) {
 			}
 			return 1, nil
 		}
-		code, err := command.Test(history.ToTarget(), parsed.TestArgs, conf)
+		code, err := command.Test(history.ToTarget(), parsed.TestArgs, conf, colorTheme)
 		if err != nil {
 			return 1, err
 		}
@@ -155,7 +157,7 @@ func run(args []string) (int, error) {
 	tests = tip.FilterTestsByPackages(tests, opt.Packages)
 	displayHistories := tip.FilterHistoriesByPackages(histories, opt.Packages)
 
-	target, err := ui.Start(tests, displayHistories, conf, opt.View, opt.Filter)
+	target, err := ui.Start(tests, displayHistories, conf, opt.View, opt.Filter, colorTheme)
 	if err != nil {
 		return 1, err
 	}
@@ -163,7 +165,7 @@ func run(args []string) (int, error) {
 		return 0, nil
 	}
 
-	code, err := command.Test(target, parsed.TestArgs, conf)
+	code, err := command.Test(target, parsed.TestArgs, conf, colorTheme)
 	if err != nil {
 		return 1, err
 	}

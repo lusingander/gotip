@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/lusingander/gotip/internal/theme"
 	"github.com/lusingander/gotip/internal/tip"
 )
 
@@ -15,12 +16,21 @@ const (
 	commandPackageMarker  = "${package}"
 )
 
-var outputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00A29C"))
+type styles struct {
+	output lipgloss.Style
+}
 
-func Test(target *tip.Target, extraArgs []string, conf *tip.Config) (int, error) {
+func newStyles(colorTheme theme.ColorTheme) styles {
+	return styles{
+		output: lipgloss.NewStyle().Foreground(colorTheme.Command),
+	}
+}
+
+func Test(target *tip.Target, extraArgs []string, conf *tip.Config, colorTheme theme.ColorTheme) (int, error) {
 	if target == nil {
 		return 0, nil
 	}
+	styles := newStyles(colorTheme)
 
 	nameRegex := testNameToTestRunRegex(target.TestNamePattern, target.IsPrefix)
 
@@ -29,7 +39,7 @@ func Test(target *tip.Target, extraArgs []string, conf *tip.Config) (int, error)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	fmt.Fprintln(os.Stderr, outputStyle.Render(cmd.String()))
+	fmt.Fprintln(os.Stderr, styles.output.Render(cmd.String()))
 	err := cmd.Run()
 	if err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
