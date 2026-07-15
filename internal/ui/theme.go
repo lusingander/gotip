@@ -3,38 +3,24 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 type ColorTheme struct {
-	Normal   lipgloss.Color
-	Selected lipgloss.Color
-	Cursor   lipgloss.Color
-	Border   lipgloss.Color
-
-	HelpHeader lipgloss.Color
-	HelpKey    lipgloss.Color
-
-	ListNormalTitle lipgloss.Color
-	ListNormalDesc  lipgloss.Color
-	ListSelected    lipgloss.Color
-	ListMatched     lipgloss.Color
-	ListDimmedTitle lipgloss.Color
-	ListDimmedDesc  lipgloss.Color
+	Text      lipgloss.Color
+	Accent    lipgloss.Color
+	Highlight lipgloss.Color
+	Muted     lipgloss.Color
+	Dimmed    lipgloss.Color
+	Border    lipgloss.Color
+	Match     lipgloss.Color
 }
 
 func DefaultColorTheme() ColorTheme {
 	return ColorTheme{
-		Normal:   lipgloss.Color("#dddddd"),
-		Selected: lipgloss.Color("#00ADD8"),
-		Cursor:   lipgloss.Color("#00ADD8"),
-		Border:   lipgloss.Color("240"),
-
-		HelpHeader: lipgloss.Color("#00ADD8"),
-		HelpKey:    lipgloss.Color("#5DC9E2"),
-
-		ListNormalTitle: lipgloss.Color("#dddddd"),
-		ListNormalDesc:  lipgloss.Color("#777777"),
-		ListSelected:    lipgloss.Color("#5DC9E2"),
-		ListMatched:     lipgloss.Color("#CE3262"),
-		ListDimmedTitle: lipgloss.Color("#777777"),
-		ListDimmedDesc:  lipgloss.Color("#4D4D4D"),
+		Text:      lipgloss.Color("#DDDDDD"),
+		Accent:    lipgloss.Color("#00ADD8"),
+		Highlight: lipgloss.Color("#5DC9E2"),
+		Muted:     lipgloss.Color("#777777"),
+		Dimmed:    lipgloss.Color("#4D4D4D"),
+		Border:    lipgloss.Color("240"),
+		Match:     lipgloss.Color("#CE3262"),
 	}
 }
 
@@ -59,18 +45,18 @@ type appStyles struct {
 
 func newAppStyles(theme ColorTheme) appStyles {
 	return appStyles{
-		selectedLabel: lipgloss.NewStyle().Foreground(theme.Selected),
-		selectedName:  lipgloss.NewStyle().Foreground(theme.Selected).Bold(true),
-		selectedPath:  lipgloss.NewStyle().Foreground(theme.Selected).Bold(true),
+		selectedLabel: lipgloss.NewStyle().Foreground(theme.Accent),
+		selectedName:  lipgloss.NewStyle().Foreground(theme.Accent).Bold(true),
+		selectedPath:  lipgloss.NewStyle().Foreground(theme.Accent).Bold(true),
 
 		header: lipgloss.NewStyle().
 			Padding(0, 2).
 			Border(lipgloss.NormalBorder(), false, false, true, false).
 			BorderForeground(theme.Border),
 
-		footerMsg:           lipgloss.NewStyle().Foreground(theme.Normal),
-		footerFiltered:      lipgloss.NewStyle().Foreground(theme.Normal),
-		footerSelectedIndex: lipgloss.NewStyle().Foreground(theme.Normal),
+		footerMsg:           lipgloss.NewStyle().Foreground(theme.Text),
+		footerFiltered:      lipgloss.NewStyle().Foreground(theme.Text),
+		footerSelectedIndex: lipgloss.NewStyle().Foreground(theme.Text),
 		footerDivider:       lipgloss.NewStyle().Foreground(theme.Border),
 
 		footer: lipgloss.NewStyle().
@@ -78,13 +64,13 @@ func newAppStyles(theme ColorTheme) appStyles {
 			Border(lipgloss.NormalBorder(), true, false, false, false).
 			BorderForeground(theme.Border),
 
-		helpHeader:   lipgloss.NewStyle().Foreground(theme.HelpHeader),
+		helpHeader:   lipgloss.NewStyle().Foreground(theme.Accent),
 		helpContent:  lipgloss.NewStyle().Padding(0, 2),
-		helpText:     lipgloss.NewStyle().Foreground(theme.Normal),
-		helpKey:      lipgloss.NewStyle().Foreground(theme.HelpKey).Bold(true),
-		filterPrompt: lipgloss.NewStyle().Foreground(theme.Normal),
-		filterText:   lipgloss.NewStyle().Foreground(theme.Normal),
-		filterCursor: lipgloss.NewStyle().Foreground(theme.Cursor),
+		helpText:     lipgloss.NewStyle().Foreground(theme.Text),
+		helpKey:      lipgloss.NewStyle().Foreground(theme.Highlight).Bold(true),
+		filterPrompt: lipgloss.NewStyle().Foreground(theme.Text),
+		filterText:   lipgloss.NewStyle().Foreground(theme.Text),
+		filterCursor: lipgloss.NewStyle().Foreground(theme.Accent),
 	}
 }
 
@@ -100,27 +86,27 @@ type listStyles struct {
 
 func newListStyles(theme ColorTheme) listStyles {
 	normalTitle := lipgloss.NewStyle().
-		Foreground(theme.ListNormalTitle).
+		Foreground(theme.Text).
 		Padding(0, 0, 0, 2)
 
 	normalDesc := normalTitle.
-		Foreground(theme.ListNormalDesc)
+		Foreground(theme.Muted)
 
 	selectedTitle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
-		BorderForeground(theme.ListSelected).
-		Foreground(theme.ListSelected).
+		BorderForeground(theme.Highlight).
+		Foreground(theme.Highlight).
 		Padding(0, 0, 0, 1)
 
 	selectedDesc := selectedTitle.
-		Foreground(theme.ListSelected)
+		Foreground(theme.Highlight)
 
 	dimmedTitle := lipgloss.NewStyle().
-		Foreground(theme.ListDimmedTitle).
+		Foreground(theme.Muted).
 		Padding(0, 0, 0, 2)
 
 	dimmedDesc := dimmedTitle.
-		Foreground(theme.ListDimmedDesc)
+		Foreground(theme.Dimmed)
 
 	return listStyles{
 		normalTitle:   normalTitle,
@@ -129,6 +115,6 @@ func newListStyles(theme ColorTheme) listStyles {
 		selectedDesc:  selectedDesc,
 		dimmedTitle:   dimmedTitle,
 		dimmedDesc:    dimmedDesc,
-		matchedColor:  theme.ListMatched,
+		matchedColor:  theme.Match,
 	}
 }

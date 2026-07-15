@@ -8,7 +8,7 @@ import (
 )
 
 func TestTrimRightSpace_StyledSpaces(t *testing.T) {
-	style := lipgloss.NewStyle().Foreground(lipgloss.Color("#dddddd"))
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("#DDDDDD"))
 	input := style.Render("Filtering: ") + style.Render("query   ")
 
 	got := trimRightSpace(input)
