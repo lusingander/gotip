@@ -10,7 +10,6 @@ import (
 	"github.com/lusingander/gotip/internal/command"
 	"github.com/lusingander/gotip/internal/listfmt"
 	"github.com/lusingander/gotip/internal/parse"
-	"github.com/lusingander/gotip/internal/theme"
 	"github.com/lusingander/gotip/internal/tip"
 	"github.com/lusingander/gotip/internal/ui"
 )
@@ -101,7 +100,7 @@ func run(args []string) (int, error) {
 	if err != nil {
 		return 1, err
 	}
-	colorTheme := theme.DefaultColorTheme()
+	colorTheme := conf.Theme
 
 	if parsed.Command == "list" {
 		if len(parsed.TestArgs) > 0 {
