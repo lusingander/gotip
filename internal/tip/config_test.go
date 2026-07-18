@@ -1,9 +1,8 @@
 package tip
 
 import (
-	"os"
-	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
@@ -18,20 +17,17 @@ func TestDefaultConfigUsesDefaultColorTheme(t *testing.T) {
 	}
 }
 
-func TestLoadAndMergeConfigMergesColorTheme(t *testing.T) {
-	dir := t.TempDir()
-	globalPath := filepath.Join(dir, "global.toml")
-	projectPath := filepath.Join(dir, "project.toml")
-	writeConfigFile(t, globalPath, "[theme]\naccent = \"#112233\"\nmuted = \"245\"\n")
-	writeConfigFile(t, projectPath, "[theme]\naccent = \"#abcdef\"\n")
+func TestDecodeAndMergeConfigMergesColorTheme(t *testing.T) {
+	globalConfig := strings.NewReader("[theme]\naccent = \"#112233\"\nmuted = \"245\"\n")
+	projectConfig := strings.NewReader("[theme]\naccent = \"#abcdef\"\n")
 
-	conf, err := loadAndMergeConfig(globalPath, defaultConfig())
+	conf, err := decodeAndMergeConfig(globalConfig, defaultConfig())
 	if err != nil {
-		t.Fatalf("loadAndMergeConfig(global) error = %v", err)
+		t.Fatalf("decodeAndMergeConfig(global) error = %v", err)
 	}
-	conf, err = loadAndMergeConfig(projectPath, conf)
+	conf, err = decodeAndMergeConfig(projectConfig, conf)
 	if err != nil {
-		t.Fatalf("loadAndMergeConfig(project) error = %v", err)
+		t.Fatalf("decodeAndMergeConfig(project) error = %v", err)
 	}
 
 	if conf.Theme.Accent != lipgloss.Color("#abcdef") {
@@ -42,12 +38,5 @@ func TestLoadAndMergeConfigMergesColorTheme(t *testing.T) {
 	}
 	if conf.Theme.Text != theme.DefaultColorTheme().Text {
 		t.Errorf("theme text = %q, want default %q", conf.Theme.Text, theme.DefaultColorTheme().Text)
-	}
-}
-
-func writeConfigFile(t *testing.T, path, content string) {
-	t.Helper()
-	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
-		t.Fatalf("write config file: %v", err)
 	}
 }

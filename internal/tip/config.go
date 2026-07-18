@@ -1,6 +1,8 @@
 package tip
 
 import (
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -65,14 +67,20 @@ func LoadConfig(projectDir string) (*Config, error) {
 }
 
 func loadAndMergeConfig(filePath string, base *Config) (*Config, error) {
-	if _, err := os.Stat(filePath); err != nil {
+	file, err := os.Open(filePath)
+	if errors.Is(err, os.ErrNotExist) {
 		return base, nil
 	}
-	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	if _, err = toml.Decode(string(bytes), base); err != nil {
+	defer file.Close()
+
+	return decodeAndMergeConfig(file, base)
+}
+
+func decodeAndMergeConfig(reader io.Reader, base *Config) (*Config, error) {
+	if _, err := toml.NewDecoder(reader).Decode(base); err != nil {
 		return nil, err
 	}
 	return base, nil
