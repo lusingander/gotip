@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/lusingander/gotip/internal/theme"
 )
 
 const (
@@ -15,9 +16,10 @@ const (
 )
 
 type Config struct {
-	Command []string      `toml:"command"`
-	Ignore  []string      `toml:"ignore"`
-	History HistoryConfig `toml:"history"`
+	Command []string         `toml:"command"`
+	Ignore  []string         `toml:"ignore"`
+	History HistoryConfig    `toml:"history"`
+	Theme   theme.ColorTheme `toml:"theme"`
 }
 
 type HistoryConfig struct {
@@ -33,6 +35,7 @@ func defaultConfig() *Config {
 			Limit:      defaultHistoryLimit,
 			DateFormat: defaultDateFormat,
 		},
+		Theme: theme.DefaultColorTheme(),
 	}
 }
 
@@ -52,6 +55,9 @@ func LoadConfig(projectDir string) (*Config, error) {
 		return nil, err
 	}
 	if conf, err = loadAndMergeConfig(projectConfigPath, conf); err != nil {
+		return nil, err
+	}
+	if err := conf.Theme.Validate(); err != nil {
 		return nil, err
 	}
 
