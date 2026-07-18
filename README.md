@@ -217,6 +217,34 @@ limit = 100
 # Uses Go's time format syntax.
 # type: string
 date_format = "2006-01-02 15:04:05"
+
+[theme]
+# Colors accept #RGB, #RRGGBB, or ANSI color numbers from 0 to 255.
+# Color values must be strings.
+# Primary UI text color.
+# type: string
+text = "#DDDDDD"
+# Selected target and filter cursor color.
+# type: string
+accent = "#00ADD8"
+# Selected list item and help key color.
+# type: string
+highlight = "#5DC9E2"
+# Secondary and dimmed text color.
+# type: string
+muted = "#777777"
+# Description color for dimmed items.
+# type: string
+dimmed = "#4D4D4D"
+# Header and footer border color.
+# type: string
+border = "240"
+# Filter query match color.
+# type: string
+match = "#CE3262"
+# Test command color.
+# type: string
+command = "#00A29C"
 ```
 
 #### `command`
@@ -238,6 +266,22 @@ If not specified, the following default command is used:
 ```toml
 command = ["go", "test", "-run", "${name}", "${package}"]
 ```
+
+#### `theme`
+
+The `theme` table controls the colors used by the UI and the displayed test command.
+You can specify only the colors you want to change; omitted colors keep their global or default values.
+
+| Field | Usage |
+| --- | --- |
+| `text` | Primary UI text |
+| `accent` | Selected target and filter cursor |
+| `highlight` | Selected list items and help keys |
+| `muted` | Secondary and dimmed text |
+| `dimmed` | Descriptions of dimmed items |
+| `border` | Header and footer borders |
+| `match` | Characters matching the filter query |
+| `command` | Test command printed before execution |
 
 ### Keybindings
 
