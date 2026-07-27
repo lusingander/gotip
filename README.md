@@ -209,6 +209,12 @@ command = []
 # type: list of strings
 ignore = []
 
+[filter]
+# Selects the fuzzy matching implementation.
+# Supported values are "gotip" and "legacy".
+# type: string
+fuzzy_matcher = "gotip"
+
 [history]
 # Limits the number of test executions to keep in history.
 # type: integer
@@ -246,6 +252,17 @@ match = "#CE3262"
 # type: string
 command = "#00A29C"
 ```
+
+#### `filter`
+
+The `filter.fuzzy_matcher` field selects the matcher used when the UI is in fuzzy filtering mode.
+
+| Value | Behavior |
+| --- | --- |
+| `gotip` | Uses gotip's matcher, which prefers compact, contiguous matches. This is the default. |
+| `legacy` | Uses the original `sahilm/fuzzy`-based matcher. |
+
+This setting does not change the initial `fuzzy` or `exact` filter mode selected by the `--filter` option.
 
 #### `command`
 

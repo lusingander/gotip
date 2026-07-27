@@ -5,7 +5,45 @@ import (
 	"testing"
 )
 
-func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
+func TestFuzzyMatchFilterFromStr(t *testing.T) {
+	tests := []struct {
+		name string
+		want []int
+	}{
+		{"gotip", []int{9, 10, 11}},
+		{"legacy", []int{0, 3, 6}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filter := fuzzyMatchFilterFromStr(tt.name)
+			ranks := filter("abc", []string{"axxbxxcxxabc"})
+			if len(ranks) != 1 {
+				t.Fatalf("want 1 rank, got %d", len(ranks))
+			}
+			for i, want := range tt.want {
+				if got := ranks[0].MatchedIndexes[i]; got != want {
+					t.Errorf("matched index %d = %d, want %d", i, got, want)
+				}
+			}
+		})
+	}
+}
+
+func TestLegacyFuzzyMatchFilterConvertsMatchedIndexesToRunes(t *testing.T) {
+	ranks := legacyFuzzyMatchFilter("deあい", []string{"abcdeあいうえお"})
+	if len(ranks) != 1 {
+		t.Fatalf("want 1 rank, got %d", len(ranks))
+	}
+	want := []int{3, 4, 5, 6}
+	for i, wantIndex := range want {
+		if got := ranks[0].MatchedIndexes[i]; got != wantIndex {
+			t.Errorf("matched index %d = %d, want %d", i, got, wantIndex)
+		}
+	}
+}
+
+func TestGotipFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 	tests := []struct {
 		target string
 		term   string
@@ -29,7 +67,7 @@ func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.term, func(t *testing.T) {
 			targets := []string{tt.target}
-			ranks := fuzzyMatchFilter(tt.term, targets)
+			ranks := gotipFuzzyMatchFilter(tt.term, targets)
 			if tt.want == nil {
 				if len(ranks) != 0 {
 					t.Errorf("want no ranks, got %d", len(ranks))
@@ -54,7 +92,7 @@ func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 	}
 }
 
-func TestFuzzyMatchFilter_Ranking(t *testing.T) {
+func TestGotipFuzzyMatchFilter_Ranking(t *testing.T) {
 	tests := []struct {
 		name    string
 		term    string
@@ -107,7 +145,7 @@ func TestFuzzyMatchFilter_Ranking(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ranks := fuzzyMatchFilter(tt.term, tt.targets)
+			ranks := gotipFuzzyMatchFilter(tt.term, tt.targets)
 			if len(ranks) != len(tt.want) {
 				t.Fatalf("want %d ranks, got %d", len(tt.want), len(ranks))
 			}
@@ -120,7 +158,7 @@ func TestFuzzyMatchFilter_Ranking(t *testing.T) {
 	}
 }
 
-func TestFuzzyMatcherAgainstExhaustiveSearch(t *testing.T) {
+func TestGotipFuzzyMatcherAgainstExhaustiveSearch(t *testing.T) {
 	random := rand.New(rand.NewSource(1))
 	alphabet := []rune("aAbB_/")
 	for range 10_000 {

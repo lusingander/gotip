@@ -2,6 +2,7 @@ package tip
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,13 +16,19 @@ const (
 
 	defaultHistoryLimit = 100
 	defaultDateFormat   = "2006-01-02 15:04:05"
+	defaultFuzzyMatcher = "gotip"
 )
 
 type Config struct {
 	Command []string         `toml:"command"`
 	Ignore  []string         `toml:"ignore"`
+	Filter  FilterConfig     `toml:"filter"`
 	History HistoryConfig    `toml:"history"`
 	Theme   theme.ColorTheme `toml:"theme"`
+}
+
+type FilterConfig struct {
+	FuzzyMatcher string `toml:"fuzzy_matcher"`
 }
 
 type HistoryConfig struct {
@@ -33,6 +40,9 @@ func defaultConfig() *Config {
 	return &Config{
 		Command: []string{},
 		Ignore:  []string{},
+		Filter: FilterConfig{
+			FuzzyMatcher: defaultFuzzyMatcher,
+		},
 		History: HistoryConfig{
 			Limit:      defaultHistoryLimit,
 			DateFormat: defaultDateFormat,
@@ -59,11 +69,23 @@ func LoadConfig(projectDir string) (*Config, error) {
 	if conf, err = loadAndMergeConfig(projectConfigPath, conf); err != nil {
 		return nil, err
 	}
-	if err := conf.Theme.Validate(); err != nil {
+	if err := conf.validate(); err != nil {
 		return nil, err
 	}
 
 	return conf, nil
+}
+
+func (c Config) validate() error {
+	switch c.Filter.FuzzyMatcher {
+	case "gotip", "legacy":
+	default:
+		return fmt.Errorf(
+			"invalid filter.fuzzy_matcher %q: must be \"gotip\" or \"legacy\"",
+			c.Filter.FuzzyMatcher,
+		)
+	}
+	return c.Theme.Validate()
 }
 
 func loadAndMergeConfig(filePath string, base *Config) (*Config, error) {

@@ -9,7 +9,23 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 )
 
-func fuzzyMatchFilter(term string, targets []string) []list.Rank {
+func fuzzyMatchFilterFromStr(s string) list.FilterFunc {
+	switch s {
+	case "gotip":
+		return gotipFuzzyMatchFilter
+	case "legacy":
+		return legacyFuzzyMatchFilter
+	default:
+		panic("unknown fuzzy matcher: " + s)
+	}
+}
+
+func legacyFuzzyMatchFilter(term string, targets []string) []list.Rank {
+	ranks := list.DefaultFilter(term, targets)
+	return convertRanks(ranks, targets)
+}
+
+func gotipFuzzyMatchFilter(term string, targets []string) []list.Rank {
 	pattern := []rune(term)
 	if len(pattern) == 0 {
 		return nil

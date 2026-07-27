@@ -48,6 +48,7 @@ type model struct {
 	showHelp        bool
 	helpOffset      int
 	matchFilterType matchFilterType
+	fuzzyFilter     list.FilterFunc
 	statusMsgType   statusMsgType
 	w, h            int
 
@@ -57,11 +58,17 @@ type model struct {
 	retTarget             *tip.Target
 }
 
-func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultFilterType matchFilterType, colorTheme theme.ColorTheme) model {
+func newModel(
+	allTestItems, historyItems []list.Item,
+	defaultView view,
+	defaultFilterType matchFilterType,
+	fuzzyFilter list.FilterFunc,
+	colorTheme theme.ColorTheme,
+) model {
 	styles := newAppStyles(colorTheme)
 	listStyles := newListStyles(colorTheme)
-	allList := newList(allTestItems, testCaseItemDelegate{styles: listStyles}, defaultFilterType, styles)
-	historyList := newList(historyItems, historyItemDelegate{styles: listStyles}, defaultFilterType, styles)
+	allList := newList(allTestItems, testCaseItemDelegate{styles: listStyles}, defaultFilterType, fuzzyFilter, styles)
+	historyList := newList(historyItems, historyItemDelegate{styles: listStyles}, defaultFilterType, fuzzyFilter, styles)
 	return model{
 		allList:               allList,
 		historyList:           historyList,
@@ -70,6 +77,7 @@ func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultF
 		showHelp:              false,
 		helpOffset:            0,
 		matchFilterType:       defaultFilterType,
+		fuzzyFilter:           fuzzyFilter,
 		statusMsgType:         noneStatusMsgType,
 		allBeforeSelected:     -1,
 		historyBeforeSelected: -1,
@@ -78,7 +86,13 @@ func newModel(allTestItems, historyItems []list.Item, defaultView view, defaultF
 	}
 }
 
-func newList(items []list.Item, delegate list.ItemDelegate, defaultFilterType matchFilterType, styles appStyles) list.Model {
+func newList(
+	items []list.Item,
+	delegate list.ItemDelegate,
+	defaultFilterType matchFilterType,
+	fuzzyFilter list.FilterFunc,
+	styles appStyles,
+) list.Model {
 	l := list.New(items, delegate, 0, 0)
 	l.SetShowTitle(false)
 	l.SetShowFilter(false)
@@ -91,7 +105,7 @@ func newList(items []list.Item, delegate list.ItemDelegate, defaultFilterType ma
 	l.FilterInput.Cursor.Style = styles.filterCursor
 	switch defaultFilterType {
 	case fuzzyMatchFilterType:
-		l.Filter = fuzzyMatchFilter
+		l.Filter = fuzzyFilter
 	case exactMatchFilterType:
 		l.Filter = exactMatchFilter
 	}
@@ -113,8 +127,8 @@ func (m *model) toggleMatchFilter() {
 		m.matchFilterType = exactMatchFilterType
 		m.statusMsgType = exactMatchFilteredStatusMsgType
 	case exactMatchFilterType:
-		m.allList.Filter = fuzzyMatchFilter
-		m.historyList.Filter = fuzzyMatchFilter
+		m.allList.Filter = m.fuzzyFilter
+		m.historyList.Filter = m.fuzzyFilter
 		m.matchFilterType = fuzzyMatchFilterType
 		m.statusMsgType = fuzzyMatchFilteredStatusMsgType
 	}
@@ -404,7 +418,8 @@ func Start(
 	historyItems := toHistoryItems(histories, conf.History.DateFormat)
 	defaultView := viewFromStr(defaultViewStr)
 	defaultFilterType := matchFilterTypeFromStr(defaultFilterTypeStr)
-	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType, colorTheme)
+	fuzzyFilter := fuzzyMatchFilterFromStr(conf.Filter.FuzzyMatcher)
+	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType, fuzzyFilter, colorTheme)
 	p := tea.NewProgram(
 		m,
 		tea.WithAltScreen(),
