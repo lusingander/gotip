@@ -17,7 +17,10 @@ func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 		{"abcdeあいうえおxyzわをん", "eあyん", []int{4, 5, 11, 15}},
 		{"abcdeあいうえおxyzわをん", "fgh", nil},
 		{"abcdeあいうえおxyzわをん", "かきくけこ", nil},
-		{"axxbxxcxxabc", "abc", []int{0, 3, 6}},
+		{"abcde", "", nil},
+		{"axxbxxcxxabc", "abc", []int{9, 10, 11}},
+		{"TestÄpfel", "äPF", []int{4, 5, 6}},
+		{"TestFoo/日本語", "日本", []int{8, 9}},
 	}
 
 	for _, tt := range tests {
@@ -42,6 +45,72 @@ func TestFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 					if ranks[0].MatchedIndexes[i] != idx {
 						t.Errorf("want matched index %d at position %d, got %d", idx, i, ranks[0].MatchedIndexes[i])
 					}
+				}
+			}
+		})
+	}
+}
+
+func TestFuzzyMatchFilter_Ranking(t *testing.T) {
+	tests := []struct {
+		name    string
+		term    string
+		targets []string
+		want    []int
+	}{
+		{
+			name:    "prefers contiguous matches and then shorter spans",
+			term:    "abc",
+			targets: []string{"TestAxxBxxC", "TestABC", "TestAbxxC"},
+			want:    []int{1, 2, 0},
+		},
+		{
+			name:    "prefers matches at word boundaries when spans are equal",
+			term:    "ab",
+			targets: []string{"TestXaxb", "Test/A-b"},
+			want:    []int{1, 0},
+		},
+		{
+			name:    "prefers fewer gaps when spans are equal",
+			term:    "abcd",
+			targets: []string{"TestAbxcxd", "TestAbcxxd"},
+			want:    []int{1, 0},
+		},
+		{
+			name:    "prefers earlier matches after match quality",
+			term:    "abc",
+			targets: []string{"TestXXabcZ", "TestXabcZZ"},
+			want:    []int{1, 0},
+		},
+		{
+			name:    "prefers shorter targets after match quality",
+			term:    "abc",
+			targets: []string{"TestXabcZZ", "TestXabc"},
+			want:    []int{1, 0},
+		},
+		{
+			name:    "preserves input order for ties",
+			term:    "abc",
+			targets: []string{"TestXabc", "TestXabc"},
+			want:    []int{0, 1},
+		},
+		{
+			name:    "excludes targets that are not subsequence matches",
+			term:    "abc",
+			targets: []string{"TestAC", "TestABC", "TestBAC"},
+			want:    []int{1},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ranks := fuzzyMatchFilter(tt.term, tt.targets)
+			if len(ranks) != len(tt.want) {
+				t.Fatalf("want %d ranks, got %d", len(tt.want), len(ranks))
+			}
+			for i, want := range tt.want {
+				if ranks[i].Index != want {
+					t.Errorf("rank %d: want target index %d, got %d", i, want, ranks[i].Index)
 				}
 			}
 		})

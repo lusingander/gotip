@@ -24,11 +24,6 @@ func matchFilterTypeFromStr(s string) matchFilterType {
 	}
 }
 
-func fuzzyMatchFilter(term string, targets []string) []list.Rank {
-	ranks := list.DefaultFilter(term, targets)
-	return convertRanks(ranks, targets)
-}
-
 func exactMatchFilter(term string, targets []string) []list.Rank {
 	ranks := make([]list.Rank, 0, len(targets))
 	termLower := strings.ToLower(term)
