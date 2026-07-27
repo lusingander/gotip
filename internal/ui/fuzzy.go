@@ -25,6 +25,19 @@ func legacyFuzzyMatchFilter(term string, targets []string) []list.Rank {
 	return convertRanks(ranks, targets)
 }
 
+// gotipFuzzyMatchFilter implements fuzzy matching tailored to Go test names.
+//
+// The legacy sahilm/fuzzy matcher may commit an early, scattered alignment
+// while scanning even when a later contiguous match exists. Its ranking also
+// mixes byte-based length penalties with rapidly increasing adjacency bonuses,
+// which can make Unicode targets and longer queries rank unexpectedly.
+//
+// This matcher instead works in runes and uses dynamic programming to select
+// the globally best case-insensitive subsequence alignment for each target.
+// Candidates are compared lexicographically by shorter match span, more word
+// boundary matches, fewer gaps, earlier start, and shorter target length.
+// Exact priority rules keep ranking predictable without balancing unrelated
+// criteria through a single weighted score; complete ties retain input order.
 func gotipFuzzyMatchFilter(term string, targets []string) []list.Rank {
 	pattern := []rune(term)
 	if len(pattern) == 0 {
