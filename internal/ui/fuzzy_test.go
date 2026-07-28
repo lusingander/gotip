@@ -43,29 +43,63 @@ func TestLegacyFuzzyMatchFilterConvertsMatchedIndexesToRunes(t *testing.T) {
 	}
 }
 
+func TestLegacyFuzzyMatchFilterPreservesOriginalBehavior(t *testing.T) {
+	t.Run("keeps the early sparse alignment", func(t *testing.T) {
+		ranks := legacyFuzzyMatchFilter("abc", []string{"axxbxxcxxabc"})
+		if len(ranks) != 1 {
+			t.Fatalf("want 1 rank, got %d", len(ranks))
+		}
+		want := []int{0, 3, 6}
+		for i, wantIndex := range want {
+			if got := ranks[0].MatchedIndexes[i]; got != wantIndex {
+				t.Errorf("matched index %d = %d, want %d", i, got, wantIndex)
+			}
+		}
+	})
+
+	t.Run("ranks target length by bytes", func(t *testing.T) {
+		targets := []string{"TestFoo/bar/baz", "TestFoo/日本語"}
+		ranks := legacyFuzzyMatchFilter("foo", targets)
+		if len(ranks) != 2 {
+			t.Fatalf("want 2 ranks, got %d", len(ranks))
+		}
+		if ranks[0].Index != 0 {
+			t.Errorf("first target index = %d, want %d", ranks[0].Index, 0)
+		}
+	})
+}
+
 func TestGotipFuzzyMatchFilter_MatchedIndexes(t *testing.T) {
 	tests := []struct {
+		name   string
 		target string
 		term   string
 		want   []int
 	}{
-		{"abcdeあいうえおxyzわをん", "abc", []int{0, 1, 2}},
-		{"abcdeあいうえおxyzわをん", "deあい", []int{3, 4, 5, 6}},
-		{"abcdeあいうえおxyzわをん", "うえお", []int{7, 8, 9}},
-		{"abcdeあいうえおxyzわをん", "xyz", []int{10, 11, 12}},
-		{"abcdeあいうえおxyzわをん", "adz", []int{0, 3, 12}},
-		{"abcdeあいうえおxyzわをん", "いうお", []int{6, 7, 9}},
-		{"abcdeあいうえおxyzわをん", "eあyん", []int{4, 5, 11, 15}},
-		{"abcdeあいうえおxyzわをん", "fgh", nil},
-		{"abcdeあいうえおxyzわをん", "かきくけこ", nil},
-		{"abcde", "", nil},
-		{"axxbxxcxxabc", "abc", []int{9, 10, 11}},
-		{"TestÄpfel", "äPF", []int{4, 5, 6}},
-		{"TestFoo/日本語", "日本", []int{8, 9}},
+		{"contiguous ASCII at start", "abcdeあいうえおxyzわをん", "abc", []int{0, 1, 2}},
+		{"contiguous match across ASCII and Unicode", "abcdeあいうえおxyzわをん", "deあい", []int{3, 4, 5, 6}},
+		{"contiguous Unicode", "abcdeあいうえおxyzわをん", "うえお", []int{7, 8, 9}},
+		{"ASCII match after Unicode", "abcdeあいうえおxyzわをん", "xyz", []int{10, 11, 12}},
+		{"sparse ASCII subsequence", "abcdeあいうえおxyzわをん", "adz", []int{0, 3, 12}},
+		{"sparse Unicode subsequence", "abcdeあいうえおxyzわをん", "いうお", []int{6, 7, 9}},
+		{"sparse mixed subsequence", "abcdeあいうえおxyzわをん", "eあyん", []int{4, 5, 11, 15}},
+		{"missing ASCII pattern", "abcdeあいうえおxyzわをん", "fgh", nil},
+		{"missing Unicode pattern", "abcdeあいうえおxyzわをん", "かきくけこ", nil},
+		{"empty pattern", "abcde", "", nil},
+		{"pattern longer than target", "abc", "abcd", nil},
+		{"later contiguous over earlier sparse", "axxbxxcxxabc", "abc", []int{9, 10, 11}},
+		{"later compact repeated characters", "a---aa", "aa", []int{4, 5}},
+		{"later word boundary over earlier occurrence", "xabc/abc", "abc", []int{5, 6, 7}},
+		{"earlier occurrence when quality is equal", "/abc/abc", "abc", []int{1, 2, 3}},
+		{"boundaries over fewer gaps within a target", "a-bxbc", "abc", []int{0, 2, 5}},
+		{"fewer gaps within a target", "abxcbcd", "abcd", []int{0, 4, 5, 6}},
+		{"Unicode case folding", "TestÄpfel", "äPF", []int{4, 5, 6}},
+		{"Unicode rune indexes", "TestFoo/日本語", "日本", []int{8, 9}},
+		{"no Unicode normalization", "TestCafe\u0301", "Café", nil},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.term, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			targets := []string{tt.target}
 			ranks := gotipFuzzyMatchFilter(tt.term, targets)
 			if tt.want == nil {
@@ -112,6 +146,12 @@ func TestGotipFuzzyMatchFilter_Ranking(t *testing.T) {
 			want:    []int{1, 0},
 		},
 		{
+			name:    "prefers boundaries over fewer gaps when spans are equal",
+			term:    "abc",
+			targets: []string{"abxxc", "a-b-c"},
+			want:    []int{1, 0},
+		},
+		{
 			name:    "prefers fewer gaps when spans are equal",
 			term:    "abcd",
 			targets: []string{"TestAbxcxd", "TestAbcxxd"},
@@ -121,6 +161,12 @@ func TestGotipFuzzyMatchFilter_Ranking(t *testing.T) {
 			name:    "prefers earlier matches after match quality",
 			term:    "abc",
 			targets: []string{"TestXXabcZ", "TestXabcZZ"},
+			want:    []int{1, 0},
+		},
+		{
+			name:    "prefers an earlier match over a shorter target",
+			term:    "abc",
+			targets: []string{"xxabc", "xabcxxxx"},
 			want:    []int{1, 0},
 		},
 		{
@@ -134,6 +180,18 @@ func TestGotipFuzzyMatchFilter_Ranking(t *testing.T) {
 			term:    "abc",
 			targets: []string{"TestXabc", "TestXabc"},
 			want:    []int{0, 1},
+		},
+		{
+			name:    "prefers exact then prefix then inner substring",
+			term:    "abc",
+			targets: []string{"xabc", "abcx", "abc"},
+			want:    []int{2, 1, 0},
+		},
+		{
+			name:    "compares target length in runes rather than bytes",
+			term:    "foo",
+			targets: []string{"TestFoo/bar/baz", "TestFoo/日本語"},
+			want:    []int{1, 0},
 		},
 		{
 			name:    "excludes targets that are not subsequence matches",
@@ -155,6 +213,31 @@ func TestGotipFuzzyMatchFilter_Ranking(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestGotipFuzzyMatchFilter_TreatsSeparatorsAsBoundaries(t *testing.T) {
+	for _, separator := range []string{"/", "-", "_", " ", ".", "\\"} {
+		t.Run(separator, func(t *testing.T) {
+			targets := []string{"xaxb", "xa" + separator + "b"}
+			ranks := gotipFuzzyMatchFilter("ab", targets)
+			if len(ranks) != 2 {
+				t.Fatalf("want 2 ranks, got %d", len(ranks))
+			}
+			if ranks[0].Index != 1 {
+				t.Errorf("first target index = %d, want %d", ranks[0].Index, 1)
+			}
+		})
+	}
+}
+
+func TestGotipFuzzyMatchFilter_TreatsCamelCaseAsBoundary(t *testing.T) {
+	ranks := gotipFuzzyMatchFilter("ab", []string{"xaxb", "xaxB"})
+	if len(ranks) != 2 {
+		t.Fatalf("want 2 ranks, got %d", len(ranks))
+	}
+	if ranks[0].Index != 1 {
+		t.Errorf("first target index = %d, want %d", ranks[0].Index, 1)
 	}
 }
 
