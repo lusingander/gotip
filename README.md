@@ -302,21 +302,25 @@ You can specify only the colors you want to change; omitted colors keep their gl
 
 ### Keybindings
 
-| Key                         | Description                                |
-| --------------------------- | ------------------------------------------ |
-| <kbd>Ctrl-c</kbd>           | Quit                                       |
-| <kbd>j</kbd> <kbd>↓</kbd>  | Select next item                           |
-| <kbd>k</kbd> <kbd>↑</kbd>  | Select previous item                       |
-| <kbd>l</kbd> <kbd>→</kbd>  | Select next page                           |
-| <kbd>h</kbd> <kbd>←</kbd>  | Select previous page                       |
-| <kbd>Enter</kbd>            | Run the selected test                      |
-| <kbd>Backspace</kbd>        | Select parent test group                   |
-| <kbd>/</kbd>                | Enter filtering mode                       |
-| <kbd>Enter</kbd>            | Confirm filter (in filtering mode)         |
-| <kbd>Esc</kbd>              | Clear filtering mode                       |
-| <kbd>Ctrl-x</kbd>           | Toggle filtering type                      |
-| <kbd>Tab</kbd>              | Switch view                                |
-| <kbd>?</kbd>                | Show help                                  |
+| Key                                                        | Description                                      |
+| ---------------------------------------------------------- | ------------------------------------------------ |
+| <kbd>Ctrl-c</kbd>                                          | Quit from any screen                             |
+| <kbd>q</kbd> <kbd>Esc</kbd>                                | Quit while browsing without an applied filter    |
+| <kbd>j</kbd> <kbd>↓</kbd>                                 | Select next item / Scroll help down               |
+| <kbd>k</kbd> <kbd>↑</kbd>                                 | Select previous item / Scroll help up             |
+| <kbd>l</kbd> <kbd>→</kbd> <kbd>PgDown</kbd> <kbd>f</kbd> <kbd>d</kbd> | Select next page                    |
+| <kbd>h</kbd> <kbd>←</kbd> <kbd>PgUp</kbd> <kbd>b</kbd> <kbd>u</kbd>  | Select previous page                |
+| <kbd>g</kbd> <kbd>Home</kbd>                               | Select first item                                |
+| <kbd>G</kbd> <kbd>End</kbd>                                | Select last item                                 |
+| <kbd>Enter</kbd>                                           | Run the selected test                            |
+| <kbd>Backspace</kbd> <kbd>Ctrl-h</kbd>                     | Select parent test group                         |
+| <kbd>/</kbd>                                               | Enter filtering mode                             |
+| <kbd>Enter</kbd>                                           | Confirm filter while editing                     |
+| <kbd>Esc</kbd>                                             | Cancel filter editing or clear an applied filter |
+| <kbd>Ctrl-x</kbd>                                          | Toggle filtering type                            |
+| <kbd>Tab</kbd> <kbd>Shift-Tab</kbd>                        | Switch view                                      |
+| <kbd>?</kbd>                                               | Show help                                        |
+| <kbd>?</kbd> <kbd>Backspace</kbd> <kbd>Ctrl-h</kbd>        | Close help                                       |
 
 ## Planned features
 
