@@ -224,6 +224,28 @@ limit = 100
 # type: string
 date_format = "2006-01-02 15:04:05"
 
+[keybindings]
+# Keys use Bubble Tea's canonical key names.
+# Each field replaces the corresponding global or default binding.
+select_previous = ["up", "k"]
+select_next = ["down", "j"]
+previous_page = ["left", "h", "pgup", "b", "u"]
+next_page = ["right", "l", "pgdown", "f", "d"]
+go_to_start = ["home", "g"]
+go_to_end = ["end", "G"]
+run = ["enter"]
+parent = ["backspace", "ctrl+h"]
+start_filter = ["/"]
+clear_filter = ["esc"]
+cancel_filter = ["esc"]
+confirm_filter = ["enter"]
+toggle_filter_type = ["ctrl+x"]
+switch_view = ["tab", "shift+tab"]
+show_help = ["?"]
+close_help = ["?", "backspace", "ctrl+h"]
+quit = ["q", "esc"]
+force_quit = ["ctrl+c"]
+
 [theme]
 # Colors accept #RGB, #RRGGBB, or ANSI color numbers from 0 to 255.
 # Color values must be strings.
@@ -263,6 +285,54 @@ The `filter.fuzzy_matcher` field selects the matcher used when the UI is in fuzz
 | `legacy` | Uses the original `sahilm/fuzzy`-based matcher. |
 
 This setting does not change the initial `fuzzy` or `exact` filter mode selected by the `--filter` option.
+
+#### `keybindings`
+
+The `keybindings` table customizes UI actions. Each field is a list because an action can have multiple keys.
+When global and project configs both define an action, the project list replaces the global list.
+Set an optional action to an empty list to disable it:
+
+```toml
+[keybindings]
+run = []
+```
+
+`force_quit` is the only required action and must contain at least one key.
+
+Key names are case-sensitive and use the strings reported by Bubble Tea:
+
+- Printable characters are written directly, such as `"j"`, `"G"`, or `"?"`. Use `" "` for Space.
+- Special keys include `"enter"`, `"backspace"`, `"tab"`, `"esc"`, arrow keys such as `"up"`, paging keys such as `"pgdown"`, and `"f1"` through `"f20"`.
+- Modifiers use `+`, as in `"ctrl+n"`, `"alt+x"`, `"shift+tab"`, or `"ctrl+shift+up"`.
+- Use canonical names such as `"tab"`, `"enter"`, and `"esc"` rather than their control-key aliases.
+
+The available actions are:
+
+| Field | Action |
+| --- | --- |
+| `select_previous` | Select the previous item, or scroll help up |
+| `select_next` | Select the next item, or scroll help down |
+| `previous_page` | Select the previous page |
+| `next_page` | Select the next page |
+| `go_to_start` | Select the first item |
+| `go_to_end` | Select the last item |
+| `run` | Run the selected test |
+| `parent` | Select the parent test group |
+| `start_filter` | Enter filtering mode |
+| `clear_filter` | Clear an applied filter |
+| `cancel_filter` | Cancel filter editing |
+| `confirm_filter` | Confirm filter editing |
+| `toggle_filter_type` | Toggle between fuzzy and exact filtering |
+| `switch_view` | Switch between All Tests and History |
+| `show_help` | Show help |
+| `close_help` | Close help |
+| `quit` | Quit while browsing |
+| `force_quit` | Quit from any screen |
+
+Keys may be reused for actions that are active in different contexts, such as `run` and `confirm_filter`.
+Conflicting keys within the same context are rejected when the config is loaded.
+`clear_filter` takes precedence over `quit` when both contain the same key and a filter is applied.
+The in-app help is generated from the active keybindings and omits disabled actions.
 
 #### `command`
 
@@ -305,7 +375,8 @@ You can specify only the colors you want to change; omitted colors keep their gl
 | Key                                                        | Description                                      |
 | ---------------------------------------------------------- | ------------------------------------------------ |
 | <kbd>Ctrl-c</kbd>                                          | Quit from any screen                             |
-| <kbd>q</kbd> <kbd>Esc</kbd>                                | Quit while browsing without an applied filter    |
+| <kbd>q</kbd>                                                | Quit while browsing                              |
+| <kbd>Esc</kbd>                                              | Quit while browsing without an applied filter    |
 | <kbd>j</kbd> <kbd>↓</kbd>                                 | Select next item / Scroll help down               |
 | <kbd>k</kbd> <kbd>↑</kbd>                                 | Select previous item / Scroll help up             |
 | <kbd>l</kbd> <kbd>→</kbd> <kbd>PgDown</kbd> <kbd>f</kbd> <kbd>d</kbd> | Select next page                    |
@@ -325,7 +396,6 @@ You can specify only the colors you want to change; omitted colors keep their gl
 ## Planned features
 
 - Launch with initial filter based on package or test name
-- Custom keybindings
 
 ## License
 
