@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 )
@@ -64,4 +66,35 @@ func (k keyMap) applyToList(l *list.Model) {
 	l.KeyMap.CloseFullHelp = k.closeHelp
 	l.KeyMap.Quit = k.quit
 	l.KeyMap.ForceQuit = k.forceQuit
+}
+
+func keyLabel(k string) string {
+	if k == " " {
+		return "Space"
+	}
+
+	var prefix string
+	for {
+		matched := false
+		for _, modifier := range []string{"ctrl", "alt", "shift"} {
+			if remaining, ok := strings.CutPrefix(k, modifier+"+"); ok {
+				prefix += strings.ToUpper(modifier[:1]) + modifier[1:] + "-"
+				k = remaining
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			break
+		}
+	}
+	switch k {
+	case "up", "down", "left", "right", "enter", "backspace", "tab", "esc", "home", "end", "delete", "insert":
+		k = strings.ToUpper(k[:1]) + k[1:]
+	case "pgup":
+		k = "PgUp"
+	case "pgdown":
+		k = "PgDown"
+	}
+	return prefix + k
 }

@@ -182,7 +182,7 @@ func (m *model) scrollHelpUp() {
 }
 
 func (m *model) scrollHelpDown() {
-	if m.helpOffset < len(helpItems())-1 {
+	if m.helpOffset < len(m.helpItems())-1 {
 		m.helpOffset++
 	}
 }
@@ -351,10 +351,10 @@ func (m model) helpView() string {
 	contentHeight := m.h - 5
 	keyLines := []string{}
 	descLines := []string{}
-	for _, h := range helpItems() {
+	for _, h := range m.helpItems() {
 		keys := make([]string, 0, len(h.keys))
 		for _, k := range h.keys {
-			keys = append(keys, m.styles.helpText.Render("<")+m.styles.helpKey.Render(k)+m.styles.helpText.Render(">"))
+			keys = append(keys, m.styles.helpText.Render("<")+m.styles.helpKey.Render(keyLabel(k))+m.styles.helpText.Render(">"))
 		}
 		keyLine := strings.Join(keys, m.styles.helpText.Render(", ")) + m.styles.helpText.Render(" : ")
 		keyLines = append(keyLines, keyLine)
@@ -393,21 +393,34 @@ type helpItem struct {
 	desc string
 }
 
-func helpItems() []helpItem {
-	return []helpItem{
-		{keys: []string{"Ctrl-c"}, desc: "Quit"},
-		{keys: []string{"Down", "j"}, desc: "Select next item"},
-		{keys: []string{"Up", "k"}, desc: "Select previous item"},
-		{keys: []string{"Right", "l"}, desc: "Select next page"},
-		{keys: []string{"Left", "h"}, desc: "Select previous page"},
-		{keys: []string{"Enter"}, desc: "Run the selected test / Confirm filter (in filtering mode)"},
-		{keys: []string{"Backspace"}, desc: "Select parent test group"},
-		{keys: []string{"/"}, desc: "Enter filtering mode"},
-		{keys: []string{"Esc"}, desc: "Clear filtering mode"},
-		{keys: []string{"Ctrl-x"}, desc: "Toggle filtering type"},
-		{keys: []string{"Tab"}, desc: "Switch view"},
-		{keys: []string{"?"}, desc: "Show help"},
+func (m model) helpItems() []helpItem {
+	items := []helpItem{
+		{keys: m.keys.forceQuit.Keys(), desc: "Quit from any screen"},
+		{keys: m.keys.quit.Keys(), desc: "Quit"},
+		{keys: m.keys.cursorDown.Keys(), desc: "Select next item / Scroll help down"},
+		{keys: m.keys.cursorUp.Keys(), desc: "Select previous item / Scroll help up"},
+		{keys: m.keys.nextPage.Keys(), desc: "Select next page"},
+		{keys: m.keys.previousPage.Keys(), desc: "Select previous page"},
+		{keys: m.keys.goToStart.Keys(), desc: "Select first item"},
+		{keys: m.keys.goToEnd.Keys(), desc: "Select last item"},
+		{keys: m.keys.run.Keys(), desc: "Run the selected test"},
+		{keys: m.keys.parent.Keys(), desc: "Select parent test group"},
+		{keys: m.keys.startFilter.Keys(), desc: "Enter filtering mode"},
+		{keys: m.keys.confirmFilter.Keys(), desc: "Confirm filter"},
+		{keys: m.keys.cancelFilter.Keys(), desc: "Cancel filtering"},
+		{keys: m.keys.clearFilter.Keys(), desc: "Clear applied filter"},
+		{keys: m.keys.toggleFilterType.Keys(), desc: "Toggle filtering type"},
+		{keys: m.keys.switchView.Keys(), desc: "Switch view"},
+		{keys: m.keys.showHelp.Keys(), desc: "Show help"},
+		{keys: m.keys.closeHelp.Keys(), desc: "Close help"},
 	}
+	visible := make([]helpItem, 0, len(items))
+	for _, item := range items {
+		if len(item.keys) > 0 {
+			visible = append(visible, item)
+		}
+	}
+	return visible
 }
 
 func Start(
