@@ -76,3 +76,35 @@ func TestDecodeAndMergeConfigMergesColorTheme(t *testing.T) {
 		t.Errorf("theme text = %q, want default %q", conf.Theme.Text, theme.DefaultColorTheme().Text)
 	}
 }
+
+func TestDefaultConfigUsesDefaultKeybindings(t *testing.T) {
+	got := defaultConfig().Keybindings
+	want := defaultKeybindingsConfig()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("default keybindings = %#v, want %#v", got, want)
+	}
+}
+
+func TestDecodeAndMergeConfigMergesKeybindings(t *testing.T) {
+	globalConfig := strings.NewReader("[keybindings]\nselect_next = [\"down\", \"ctrl+n\"]\nrun = [\"r\"]\n")
+	projectConfig := strings.NewReader("[keybindings]\nrun = [\"enter\", \"r\"]\n")
+
+	conf, err := decodeAndMergeConfig(globalConfig, defaultConfig())
+	if err != nil {
+		t.Fatalf("decodeAndMergeConfig(global) error = %v", err)
+	}
+	conf, err = decodeAndMergeConfig(projectConfig, conf)
+	if err != nil {
+		t.Fatalf("decodeAndMergeConfig(project) error = %v", err)
+	}
+
+	if want := []string{"down", "ctrl+n"}; !reflect.DeepEqual(conf.Keybindings.SelectNext, want) {
+		t.Errorf("select_next = %v, want %v", conf.Keybindings.SelectNext, want)
+	}
+	if want := []string{"enter", "r"}; !reflect.DeepEqual(conf.Keybindings.Run, want) {
+		t.Errorf("run = %v, want %v", conf.Keybindings.Run, want)
+	}
+	if want := defaultKeybindingsConfig().SelectPrevious; !reflect.DeepEqual(conf.Keybindings.SelectPrevious, want) {
+		t.Errorf("select_previous = %v, want default %v", conf.Keybindings.SelectPrevious, want)
+	}
+}

@@ -20,11 +20,12 @@ const (
 )
 
 type Config struct {
-	Command []string         `toml:"command"`
-	Ignore  []string         `toml:"ignore"`
-	Filter  FilterConfig     `toml:"filter"`
-	History HistoryConfig    `toml:"history"`
-	Theme   theme.ColorTheme `toml:"theme"`
+	Command     []string          `toml:"command"`
+	Ignore      []string          `toml:"ignore"`
+	Filter      FilterConfig      `toml:"filter"`
+	History     HistoryConfig     `toml:"history"`
+	Keybindings KeybindingsConfig `toml:"keybindings"`
+	Theme       theme.ColorTheme  `toml:"theme"`
 }
 
 type FilterConfig struct {
@@ -47,7 +48,8 @@ func defaultConfig() *Config {
 			Limit:      defaultHistoryLimit,
 			DateFormat: defaultDateFormat,
 		},
-		Theme: theme.DefaultColorTheme(),
+		Keybindings: defaultKeybindingsConfig(),
+		Theme:       theme.DefaultColorTheme(),
 	}
 }
 
