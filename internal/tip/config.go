@@ -87,6 +87,9 @@ func (c Config) validate() error {
 			c.Filter.FuzzyMatcher,
 		)
 	}
+	if err := c.Keybindings.validate(); err != nil {
+		return err
+	}
 	return c.Theme.Validate()
 }
 

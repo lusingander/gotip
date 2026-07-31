@@ -53,6 +53,83 @@ func TestConfigValidateRejectsUnknownFuzzyMatcher(t *testing.T) {
 	}
 }
 
+func TestConfigValidateAcceptsDefaultKeybindings(t *testing.T) {
+	if err := defaultConfig().validate(); err != nil {
+		t.Fatalf("validate() error = %v", err)
+	}
+}
+
+func TestConfigValidateAcceptsEmptyOptionalKeybinding(t *testing.T) {
+	conf := defaultConfig()
+	conf.Keybindings.Run = []string{}
+
+	if err := conf.validate(); err != nil {
+		t.Fatalf("validate() error = %v", err)
+	}
+}
+
+func TestConfigValidateRejectsInvalidKeybinding(t *testing.T) {
+	tests := []string{"", "ctrl+i", "not-a-key", "alt+alt+x"}
+	for _, key := range tests {
+		t.Run(key, func(t *testing.T) {
+			conf := defaultConfig()
+			conf.Keybindings.Run = []string{key}
+
+			if err := conf.validate(); err == nil {
+				t.Fatal("validate() error = nil, want an error")
+			}
+		})
+	}
+}
+
+func TestConfigValidateAcceptsSupportedKeybindings(t *testing.T) {
+	tests := []string{"x", "G", "界", " ", "alt+x", "alt+ctrl+c", "ctrl+shift+up", "f20"}
+	for _, key := range tests {
+		t.Run(key, func(t *testing.T) {
+			if !validKeyName(key) {
+				t.Errorf("validKeyName(%q) = false, want true", key)
+			}
+		})
+	}
+}
+
+func TestConfigValidateRejectsDuplicateKeybinding(t *testing.T) {
+	conf := defaultConfig()
+	conf.Keybindings.Run = []string{"enter", "enter"}
+
+	if err := conf.validate(); err == nil {
+		t.Fatal("validate() error = nil, want an error")
+	}
+}
+
+func TestConfigValidateRejectsKeybindingConflict(t *testing.T) {
+	conf := defaultConfig()
+	conf.Keybindings.Run = []string{"x"}
+	conf.Keybindings.SwitchView = []string{"x"}
+
+	if err := conf.validate(); err == nil {
+		t.Fatal("validate() error = nil, want an error")
+	}
+}
+
+func TestConfigValidateRejectsForceQuitConflict(t *testing.T) {
+	conf := defaultConfig()
+	conf.Keybindings.Run = []string{"ctrl+c"}
+
+	if err := conf.validate(); err == nil {
+		t.Fatal("validate() error = nil, want an error")
+	}
+}
+
+func TestConfigValidateRejectsEmptyForceQuit(t *testing.T) {
+	conf := defaultConfig()
+	conf.Keybindings.ForceQuit = []string{}
+
+	if err := conf.validate(); err == nil {
+		t.Fatal("validate() error = nil, want an error")
+	}
+}
+
 func TestDecodeAndMergeConfigMergesColorTheme(t *testing.T) {
 	globalConfig := strings.NewReader("[theme]\naccent = \"#112233\"\nmuted = \"245\"\n")
 	projectConfig := strings.NewReader("[theme]\naccent = \"#abcdef\"\n")
