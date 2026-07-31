@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -42,6 +43,7 @@ const (
 type model struct {
 	allList         list.Model
 	historyList     list.Model
+	keys            keyMap
 	styles          appStyles
 	currentView     view
 	showHelp        bool
@@ -64,13 +66,15 @@ func newModel(
 	fuzzyFilter list.FilterFunc,
 	colorTheme theme.ColorTheme,
 ) model {
+	keys := defaultKeyMap()
 	styles := newAppStyles(colorTheme)
 	listStyles := newListStyles(colorTheme)
-	allList := newList(allTestItems, testCaseItemDelegate{styles: listStyles}, defaultFilterType, fuzzyFilter, styles)
-	historyList := newList(historyItems, historyItemDelegate{styles: listStyles}, defaultFilterType, fuzzyFilter, styles)
+	allList := newList(allTestItems, testCaseItemDelegate{styles: listStyles}, defaultFilterType, fuzzyFilter, styles, keys)
+	historyList := newList(historyItems, historyItemDelegate{styles: listStyles}, defaultFilterType, fuzzyFilter, styles, keys)
 	return model{
 		allList:               allList,
 		historyList:           historyList,
+		keys:                  keys,
 		styles:                styles,
 		currentView:           defaultView,
 		showHelp:              false,
@@ -91,6 +95,7 @@ func newList(
 	defaultFilterType matchFilterType,
 	fuzzyFilter list.FilterFunc,
 	styles appStyles,
+	keys keyMap,
 ) list.Model {
 	l := list.New(items, delegate, 0, 0)
 	l.SetShowTitle(false)
@@ -108,7 +113,7 @@ func newList(
 	case exactMatchFilterType:
 		l.Filter = exactMatchFilter
 	}
-	defaultKeyMap().applyToList(&l)
+	keys.applyToList(&l)
 	return l
 }
 
@@ -195,7 +200,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.setSize(msg.Width, msg.Height)
 	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" {
+		if key.Matches(msg, m.keys.forceQuit) {
 			// exit
 			return m, tea.Quit
 		}
@@ -208,32 +213,32 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.showHelp {
-			switch msg.String() {
-			case "up", "k":
+			switch {
+			case key.Matches(msg, m.keys.cursorUp):
 				m.scrollHelpUp()
-			case "down", "j":
+			case key.Matches(msg, m.keys.cursorDown):
 				m.scrollHelpDown()
-			case "?", "backspace", "ctrl+h":
+			case key.Matches(msg, m.keys.closeHelp):
 				m.closeHelp()
 			}
 			return m, nil
 		}
 
-		switch msg.String() {
-		case "enter":
+		switch {
+		case key.Matches(msg, m.keys.run):
 			m.retTarget = m.tmpTarget
 			return m, tea.Quit
-		case "backspace", "ctrl+h":
+		case key.Matches(msg, m.keys.parent):
 			if m.tmpTarget != nil {
 				m.tmpTarget.DropLastSegment()
 			}
-		case "tab", "shift+tab":
+		case key.Matches(msg, m.keys.switchView):
 			m.toggleView()
-		case "ctrl+x":
+		case key.Matches(msg, m.keys.toggleFilterType):
 			if m.allList.FilterState() == list.Unfiltered || m.historyList.FilterState() == list.Unfiltered {
 				m.toggleMatchFilter()
 			}
-		case "?":
+		case key.Matches(msg, m.keys.showHelp):
 			m.openHelp()
 			return m, nil
 		}

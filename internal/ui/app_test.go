@@ -41,6 +41,7 @@ func TestNewListUsesExistingKeybindings(t *testing.T) {
 		fuzzyMatchFilterType,
 		legacyFuzzyMatchFilter,
 		newAppStyles(theme.DefaultColorTheme()),
+		defaultKeyMap(),
 	)
 
 	tests := []struct {
