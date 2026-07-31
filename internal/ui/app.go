@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -109,7 +108,7 @@ func newList(
 	case exactMatchFilterType:
 		l.Filter = exactMatchFilter
 	}
-	l.KeyMap.AcceptWhileFiltering = key.NewBinding(key.WithKeys("enter"))
+	defaultKeyMap().applyToList(&l)
 	return l
 }
 
