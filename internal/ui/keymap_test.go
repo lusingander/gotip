@@ -5,18 +5,21 @@ import (
 	"testing"
 
 	"github.com/lusingander/gotip/internal/theme"
+	"github.com/lusingander/gotip/internal/tip"
 )
 
 func TestHelpItemsUseModelKeybindings(t *testing.T) {
+	keybindings := tip.DefaultKeybindingsConfig()
+	keybindings.Run = []string{"r", "ctrl+r"}
 	m := newModel(
 		nil,
 		nil,
 		allView,
 		fuzzyMatchFilterType,
 		legacyFuzzyMatchFilter,
+		keybindings,
 		theme.DefaultColorTheme(),
 	)
-	m.keys.run.SetKeys("r", "ctrl+r")
 
 	var got []string
 	for _, item := range m.helpItems() {

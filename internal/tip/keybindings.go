@@ -29,7 +29,8 @@ type KeybindingsConfig struct {
 	ForceQuit        []string `toml:"force_quit"`
 }
 
-func defaultKeybindingsConfig() KeybindingsConfig {
+// DefaultKeybindingsConfig returns the built-in UI keybindings.
+func DefaultKeybindingsConfig() KeybindingsConfig {
 	return KeybindingsConfig{
 		SelectPrevious:   []string{"up", "k"},
 		SelectNext:       []string{"down", "j"},

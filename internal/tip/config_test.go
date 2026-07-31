@@ -156,7 +156,7 @@ func TestDecodeAndMergeConfigMergesColorTheme(t *testing.T) {
 
 func TestDefaultConfigUsesDefaultKeybindings(t *testing.T) {
 	got := defaultConfig().Keybindings
-	want := defaultKeybindingsConfig()
+	want := DefaultKeybindingsConfig()
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("default keybindings = %#v, want %#v", got, want)
 	}
@@ -181,7 +181,7 @@ func TestDecodeAndMergeConfigMergesKeybindings(t *testing.T) {
 	if want := []string{"enter", "r"}; !reflect.DeepEqual(conf.Keybindings.Run, want) {
 		t.Errorf("run = %v, want %v", conf.Keybindings.Run, want)
 	}
-	if want := defaultKeybindingsConfig().SelectPrevious; !reflect.DeepEqual(conf.Keybindings.SelectPrevious, want) {
+	if want := DefaultKeybindingsConfig().SelectPrevious; !reflect.DeepEqual(conf.Keybindings.SelectPrevious, want) {
 		t.Errorf("select_previous = %v, want default %v", conf.Keybindings.SelectPrevious, want)
 	}
 }

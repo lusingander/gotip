@@ -64,9 +64,10 @@ func newModel(
 	defaultView view,
 	defaultFilterType matchFilterType,
 	fuzzyFilter list.FilterFunc,
+	keybindings tip.KeybindingsConfig,
 	colorTheme theme.ColorTheme,
 ) model {
-	keys := defaultKeyMap()
+	keys := newKeyMap(keybindings)
 	styles := newAppStyles(colorTheme)
 	listStyles := newListStyles(colorTheme)
 	allList := newList(allTestItems, testCaseItemDelegate{styles: listStyles}, defaultFilterType, fuzzyFilter, styles, keys)
@@ -436,7 +437,7 @@ func Start(
 	defaultView := viewFromStr(defaultViewStr)
 	defaultFilterType := matchFilterTypeFromStr(defaultFilterTypeStr)
 	fuzzyFilter := fuzzyMatchFilterFromStr(conf.Filter.FuzzyMatcher)
-	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType, fuzzyFilter, colorTheme)
+	m := newModel(allTestItems, historyItems, defaultView, defaultFilterType, fuzzyFilter, conf.Keybindings, colorTheme)
 	p := tea.NewProgram(
 		m,
 		tea.WithAltScreen(),

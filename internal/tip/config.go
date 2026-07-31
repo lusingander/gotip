@@ -48,7 +48,7 @@ func defaultConfig() *Config {
 			Limit:      defaultHistoryLimit,
 			DateFormat: defaultDateFormat,
 		},
-		Keybindings: defaultKeybindingsConfig(),
+		Keybindings: DefaultKeybindingsConfig(),
 		Theme:       theme.DefaultColorTheme(),
 	}
 }

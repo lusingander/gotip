@@ -17,6 +17,7 @@ func TestToggleMatchFilterRestoresConfiguredFuzzyMatcher(t *testing.T) {
 		allView,
 		exactMatchFilterType,
 		legacyFuzzyMatchFilter,
+		tip.DefaultKeybindingsConfig(),
 		theme.DefaultColorTheme(),
 	)
 
@@ -41,7 +42,7 @@ func TestNewListUsesExistingKeybindings(t *testing.T) {
 		fuzzyMatchFilterType,
 		legacyFuzzyMatchFilter,
 		newAppStyles(theme.DefaultColorTheme()),
-		defaultKeyMap(),
+		newKeyMap(tip.DefaultKeybindingsConfig()),
 	)
 
 	tests := []struct {
@@ -157,6 +158,7 @@ func TestExistingApplicationKeybindings(t *testing.T) {
 				allView,
 				fuzzyMatchFilterType,
 				legacyFuzzyMatchFilter,
+				tip.DefaultKeybindingsConfig(),
 				theme.DefaultColorTheme(),
 			)
 			m.tmpTarget = tip.NewTarget("./foo/foo_test.go", "TestFoo/Bar", false)
@@ -185,6 +187,7 @@ func TestExistingHelpKeybindings(t *testing.T) {
 				allView,
 				fuzzyMatchFilterType,
 				legacyFuzzyMatchFilter,
+				tip.DefaultKeybindingsConfig(),
 				theme.DefaultColorTheme(),
 			)
 			m.openHelp()
@@ -194,5 +197,179 @@ func TestExistingHelpKeybindings(t *testing.T) {
 				t.Error("showHelp = true, want false")
 			}
 		})
+	}
+}
+
+func TestConfiguredRunKeybindingReplacesDefault(t *testing.T) {
+	keybindings := tip.DefaultKeybindingsConfig()
+	keybindings.Run = []string{"r"}
+	m := newModel(
+		[]list.Item{&testCaseItem{path: "./foo/foo_test.go", name: "TestFoo"}},
+		nil,
+		allView,
+		fuzzyMatchFilterType,
+		legacyFuzzyMatchFilter,
+		keybindings,
+		theme.DefaultColorTheme(),
+	)
+	m.tmpTarget = tip.NewTarget("./foo/foo_test.go", "TestFoo", false)
+	m.allBeforeSelected = m.allList.GlobalIndex()
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(model)
+	if m.retTarget != nil {
+		t.Fatalf("default Enter key ran target %#v", m.retTarget)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'r'}})
+	m = updated.(model)
+	if m.retTarget == nil || m.retTarget.TestNamePattern != "TestFoo" {
+		t.Errorf("retTarget = %#v, want TestFoo", m.retTarget)
+	}
+}
+
+func TestConfiguredSelectionKeybindingReplacesDefault(t *testing.T) {
+	keybindings := tip.DefaultKeybindingsConfig()
+	keybindings.SelectNext = []string{"n"}
+	m := newModel(
+		[]list.Item{
+			&testCaseItem{path: "./foo/foo_test.go", name: "TestFoo"},
+			&testCaseItem{path: "./foo/foo_test.go", name: "TestBar"},
+		},
+		nil,
+		allView,
+		fuzzyMatchFilterType,
+		legacyFuzzyMatchFilter,
+		keybindings,
+		theme.DefaultColorTheme(),
+	)
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m = updated.(model)
+	if got := m.allList.Index(); got != 0 {
+		t.Fatalf("index after default j = %d, want 0", got)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'n'}})
+	m = updated.(model)
+	if got := m.allList.Index(); got != 1 {
+		t.Errorf("index after configured n = %d, want 1", got)
+	}
+}
+
+func TestConfiguredHelpKeybindingsReplaceDefaults(t *testing.T) {
+	keybindings := tip.DefaultKeybindingsConfig()
+	keybindings.ShowHelp = []string{"H"}
+	keybindings.CloseHelp = []string{"X"}
+	m := newModel(
+		nil,
+		nil,
+		allView,
+		fuzzyMatchFilterType,
+		legacyFuzzyMatchFilter,
+		keybindings,
+		theme.DefaultColorTheme(),
+	)
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	m = updated.(model)
+	if m.showHelp {
+		t.Fatal("default ? key opened help")
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'H'}})
+	m = updated.(model)
+	if !m.showHelp {
+		t.Fatal("configured H key did not open help")
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'X'}})
+	m = updated.(model)
+	if m.showHelp {
+		t.Error("configured X key did not close help")
+	}
+}
+
+func TestConfiguredFilterKeybindingsReplaceDefaults(t *testing.T) {
+	keybindings := tip.DefaultKeybindingsConfig()
+	keybindings.StartFilter = []string{"s"}
+	keybindings.ConfirmFilter = []string{"ctrl+g"}
+	keybindings.CancelFilter = []string{"ctrl+q"}
+	keybindings.ClearFilter = []string{"c"}
+	m := newModel(
+		[]list.Item{&testCaseItem{path: "./foo/foo_test.go", name: "TestFoo"}},
+		nil,
+		allView,
+		fuzzyMatchFilterType,
+		legacyFuzzyMatchFilter,
+		keybindings,
+		theme.DefaultColorTheme(),
+	)
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	m = updated.(model)
+	if got := m.allList.FilterState(); got != list.Filtering {
+		t.Fatalf("filter state after configured s = %v, want Filtering", got)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'f'}})
+	m = updated.(model)
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(model)
+	if got := m.allList.FilterState(); got != list.Filtering {
+		t.Fatalf("filter state after default Enter = %v, want Filtering", got)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyCtrlG})
+	m = updated.(model)
+	if got := m.allList.FilterState(); got != list.FilterApplied {
+		t.Fatalf("filter state after configured Ctrl-g = %v, want FilterApplied", got)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	m = updated.(model)
+	if got := m.allList.FilterState(); got != list.Unfiltered {
+		t.Fatalf("filter state after configured c = %v, want Unfiltered", got)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	m = updated.(model)
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m = updated.(model)
+	if got := m.allList.FilterState(); got != list.Filtering {
+		t.Fatalf("filter state after default Esc = %v, want Filtering", got)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyCtrlQ})
+	m = updated.(model)
+	if got := m.allList.FilterState(); got != list.Unfiltered {
+		t.Errorf("filter state after configured Ctrl-q = %v, want Unfiltered", got)
+	}
+}
+
+func TestEmptyConfiguredKeybindingDisablesAction(t *testing.T) {
+	keybindings := tip.DefaultKeybindingsConfig()
+	keybindings.Run = []string{}
+	m := newModel(
+		[]list.Item{&testCaseItem{path: "./foo/foo_test.go", name: "TestFoo"}},
+		nil,
+		allView,
+		fuzzyMatchFilterType,
+		legacyFuzzyMatchFilter,
+		keybindings,
+		theme.DefaultColorTheme(),
+	)
+	m.tmpTarget = tip.NewTarget("./foo/foo_test.go", "TestFoo", false)
+	m.allBeforeSelected = m.allList.GlobalIndex()
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(model)
+	if m.retTarget != nil {
+		t.Fatalf("disabled run action returned target %#v", m.retTarget)
+	}
+	for _, item := range m.helpItems() {
+		if item.desc == "Run the selected test" {
+			t.Error("disabled run action is shown in help")
+		}
 	}
 }

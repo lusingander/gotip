@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/lusingander/gotip/internal/tip"
 )
 
 type keyMap struct {
@@ -28,26 +29,26 @@ type keyMap struct {
 	forceQuit        key.Binding
 }
 
-func defaultKeyMap() keyMap {
+func newKeyMap(config tip.KeybindingsConfig) keyMap {
 	return keyMap{
-		cursorUp:         key.NewBinding(key.WithKeys("up", "k")),
-		cursorDown:       key.NewBinding(key.WithKeys("down", "j")),
-		previousPage:     key.NewBinding(key.WithKeys("left", "h", "pgup", "b", "u")),
-		nextPage:         key.NewBinding(key.WithKeys("right", "l", "pgdown", "f", "d")),
-		goToStart:        key.NewBinding(key.WithKeys("home", "g")),
-		goToEnd:          key.NewBinding(key.WithKeys("end", "G")),
-		run:              key.NewBinding(key.WithKeys("enter")),
-		parent:           key.NewBinding(key.WithKeys("backspace", "ctrl+h")),
-		startFilter:      key.NewBinding(key.WithKeys("/")),
-		clearFilter:      key.NewBinding(key.WithKeys("esc")),
-		cancelFilter:     key.NewBinding(key.WithKeys("esc")),
-		confirmFilter:    key.NewBinding(key.WithKeys("enter")),
-		toggleFilterType: key.NewBinding(key.WithKeys("ctrl+x")),
-		switchView:       key.NewBinding(key.WithKeys("tab", "shift+tab")),
-		showHelp:         key.NewBinding(key.WithKeys("?")),
-		closeHelp:        key.NewBinding(key.WithKeys("?", "backspace", "ctrl+h")),
-		quit:             key.NewBinding(key.WithKeys("q", "esc")),
-		forceQuit:        key.NewBinding(key.WithKeys("ctrl+c")),
+		cursorUp:         key.NewBinding(key.WithKeys(config.SelectPrevious...)),
+		cursorDown:       key.NewBinding(key.WithKeys(config.SelectNext...)),
+		previousPage:     key.NewBinding(key.WithKeys(config.PreviousPage...)),
+		nextPage:         key.NewBinding(key.WithKeys(config.NextPage...)),
+		goToStart:        key.NewBinding(key.WithKeys(config.GoToStart...)),
+		goToEnd:          key.NewBinding(key.WithKeys(config.GoToEnd...)),
+		run:              key.NewBinding(key.WithKeys(config.Run...)),
+		parent:           key.NewBinding(key.WithKeys(config.Parent...)),
+		startFilter:      key.NewBinding(key.WithKeys(config.StartFilter...)),
+		clearFilter:      key.NewBinding(key.WithKeys(config.ClearFilter...)),
+		cancelFilter:     key.NewBinding(key.WithKeys(config.CancelFilter...)),
+		confirmFilter:    key.NewBinding(key.WithKeys(config.ConfirmFilter...)),
+		toggleFilterType: key.NewBinding(key.WithKeys(config.ToggleFilterType...)),
+		switchView:       key.NewBinding(key.WithKeys(config.SwitchView...)),
+		showHelp:         key.NewBinding(key.WithKeys(config.ShowHelp...)),
+		closeHelp:        key.NewBinding(key.WithKeys(config.CloseHelp...)),
+		quit:             key.NewBinding(key.WithKeys(config.Quit...)),
+		forceQuit:        key.NewBinding(key.WithKeys(config.ForceQuit...)),
 	}
 }
 
