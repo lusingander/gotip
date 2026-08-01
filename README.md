@@ -299,12 +299,16 @@ run = []
 
 `force_quit` is the only required action and must contain at least one key.
 
-Key names are case-sensitive and use the strings reported by Bubble Tea:
+Key names are case-sensitive and use the strings returned by Bubble Tea's
+[`KeyMsg.String`](https://pkg.go.dev/github.com/charmbracelet/bubbletea@v1.3.10#KeyMsg.String):
 
 - Printable characters are written directly, such as `"j"`, `"G"`, or `"?"`. Use `" "` for Space.
 - Special keys include `"enter"`, `"backspace"`, `"tab"`, `"esc"`, arrow keys such as `"up"`, paging keys such as `"pgdown"`, and `"f1"` through `"f20"`.
 - Modifiers use `+`, as in `"ctrl+n"`, `"alt+x"`, `"shift+tab"`, or `"ctrl+shift+up"`.
 - Use canonical names such as `"tab"`, `"enter"`, and `"esc"` rather than their control-key aliases.
+
+For canonical special-key names, see Bubble Tea v1.3.10's
+[key name mapping](https://github.com/charmbracelet/bubbletea/blob/v1.3.10/key.go#L260-L350).
 
 The available actions are:
 
