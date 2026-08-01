@@ -397,10 +397,6 @@ You can specify only the colors you want to change; omitted colors keep their gl
 | <kbd>?</kbd>                                               | Show help                                        |
 | <kbd>?</kbd> <kbd>Backspace</kbd> <kbd>Ctrl-h</kbd>        | Close help                                       |
 
-## Planned features
-
-- Launch with initial filter based on package or test name
-
 ## License
 
 MIT
