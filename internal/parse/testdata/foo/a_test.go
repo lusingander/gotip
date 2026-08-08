@@ -217,6 +217,13 @@ func TestStringIdentNames(t *testing.T) {
 	})
 }
 
+func TestStringSliceLiteralNames(t *testing.T) {
+	tests := []string{"first", "second", "third"}
+	for _, name := range tests {
+		t.Run(name, func(t *testing.T) {})
+	}
+}
+
 func TestNonTestingRunIgnored(t *testing.T) {
 	runner := fakeRunner{}
 	runner.Run("not-a-subtest", func() {})
