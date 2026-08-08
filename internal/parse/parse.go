@@ -131,6 +131,9 @@ func findSubTests(stmts []ast.Stmt, testingTReceivers []string, cs ...subTestCon
 			subs = append(subs, findSubTests(s.Body.List, testingTReceivers, newCs...)...)
 		case *ast.AssignStmt:
 			newCs = append(newCs, findStringIdentContextsFromAssignStmt(s)...)
+			if c := findStringSliceLiteralDeclarationFromAssignStmt(s); c != nil {
+				newCs = append(newCs, c)
+			}
 			if c := findStructSliceLiteralDeclarationFromAssignStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
@@ -139,6 +142,9 @@ func findSubTests(stmts []ast.Stmt, testingTReceivers []string, cs ...subTestCon
 			}
 		case *ast.DeclStmt:
 			newCs = append(newCs, findStringIdentContextsFromDeclStmt(s)...)
+			if c := findStringSliceLiteralDeclarationFromDeclStmt(s); c != nil {
+				newCs = append(newCs, c)
+			}
 			if c := findStructSliceLiteralDeclarationFromDeclStmt(s); c != nil {
 				newCs = append(newCs, c)
 			}
@@ -190,6 +196,55 @@ func isTestingTType(expr ast.Expr) bool {
 	}
 	pkg, ok := sel.X.(*ast.Ident)
 	return ok && pkg.Name == "testing"
+}
+
+func findStringSliceLiteralDeclarationFromAssignStmt(assign *ast.AssignStmt) *stringSliceLiteralDeclarationContext {
+	if len(assign.Lhs) != 1 || len(assign.Rhs) != 1 {
+		return nil
+	}
+	ident, ok := assign.Lhs[0].(*ast.Ident)
+	if !ok {
+		return nil
+	}
+	compLit, ok := assign.Rhs[0].(*ast.CompositeLit)
+	if !ok || !isStringSliceLiteral(compLit) {
+		return nil
+	}
+	return &stringSliceLiteralDeclarationContext{
+		ident:   ident.Name,
+		compLit: compLit,
+	}
+}
+
+func findStringSliceLiteralDeclarationFromDeclStmt(decl *ast.DeclStmt) *stringSliceLiteralDeclarationContext {
+	genDecl, ok := decl.Decl.(*ast.GenDecl)
+	if !ok || genDecl.Tok != token.VAR {
+		return nil
+	}
+	for _, spec := range genDecl.Specs {
+		valueSpec, ok := spec.(*ast.ValueSpec)
+		if !ok || len(valueSpec.Names) != 1 || len(valueSpec.Values) != 1 {
+			continue
+		}
+		compLit, ok := valueSpec.Values[0].(*ast.CompositeLit)
+		if !ok || !isStringSliceLiteral(compLit) {
+			continue
+		}
+		return &stringSliceLiteralDeclarationContext{
+			ident:   valueSpec.Names[0].Name,
+			compLit: compLit,
+		}
+	}
+	return nil
+}
+
+func isStringSliceLiteral(compLit *ast.CompositeLit) bool {
+	arrayType, ok := compLit.Type.(*ast.ArrayType)
+	if !ok || arrayType.Len != nil {
+		return false
+	}
+	elementType, ok := arrayType.Elt.(*ast.Ident)
+	return ok && elementType.Name == "string"
 }
 
 func findStructSliceLiteralDeclarationFromAssignStmt(assign *ast.AssignStmt) *structSliceLiteralDeclarationContext {
@@ -424,9 +479,26 @@ func findSubTestNameFromIdent(ident *ast.Ident, cs ...subTestContext) *identSubT
 				n.cases = findMapTestCaseNames(c.iterIdent, cs[:i]...)
 				return n
 			}
+			if n.name == c.valueIdent {
+				n.cases = findStringSliceTestCaseNames(c.iterIdent, cs[:i]...)
+				return n
+			}
 		}
 	}
 	return n
+}
+
+func findStringSliceTestCaseNames(ident string, cs ...subTestContext) []string {
+	for i := len(cs) - 1; i >= 0; i-- {
+		stringSliceCtx, ok := cs[i].(*stringSliceLiteralDeclarationContext)
+		if !ok {
+			continue
+		}
+		if stringSliceCtx.ident == ident {
+			return stringSliceCtx.extractTestCaseNames()
+		}
+	}
+	return nil
 }
 
 func findMapTestCaseNames(ident string, cs ...subTestContext) []string {
@@ -513,6 +585,23 @@ type subTestContext interface{}
 type stringIdentContext struct {
 	ident string
 	value string
+}
+
+type stringSliceLiteralDeclarationContext struct {
+	ident   string
+	compLit *ast.CompositeLit
+}
+
+func (c *stringSliceLiteralDeclarationContext) extractTestCaseNames() []string {
+	ns := make([]string, 0, len(c.compLit.Elts))
+	for _, elt := range c.compLit.Elts {
+		name, ok := stringLiteralValue(elt)
+		if !ok {
+			return nil
+		}
+		ns = append(ns, name)
+	}
+	return ns
 }
 
 type mapLiteralDeclarationContext struct {
