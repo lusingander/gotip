@@ -527,6 +527,10 @@ func (t *unresolvedSubTest) resolve() []*tip.SubTest {
 	tests := make([]*tip.SubTest, 0)
 	ns, resolved := t.name.resolveTestName()
 	for _, n := range ns {
+		if resolved && n == "" {
+			// testing uses #00 for the first subtest with an empty name.
+			n = "#00"
+		}
 		test := &tip.SubTest{
 			Name:     n,
 			Resolved: resolved,
