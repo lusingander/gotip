@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -84,6 +85,7 @@ func testNameToTestRunRegex(pattern string, isPrefix bool) string {
 		if segment == "" {
 			continue
 		}
+		segment = regexp.QuoteMeta(segment)
 		if isPrefix && i == len(segments)-1 {
 			segments[i] = "^" + segment
 		} else {
