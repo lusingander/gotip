@@ -20,6 +20,13 @@ func TestUnresolvedSubTestResolve(t *testing.T) {
 			want: []*tip.SubTest{{Name: "outer", Resolved: true, Subs: []*tip.SubTest{}}},
 		},
 		{
+			name: "empty resolved name",
+			sub: &unresolvedSubTest{
+				name: &literalSubTestName{name: ""},
+			},
+			want: []*tip.SubTest{{Name: "#00", Resolved: true, Subs: []*tip.SubTest{}}},
+		},
+		{
 			name: "unresolved name",
 			sub: &unresolvedSubTest{
 				name: &unknownSubTestName{},
