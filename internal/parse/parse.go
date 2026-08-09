@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -424,11 +425,12 @@ func findSubTest(exprs []ast.Expr, cs ...subTestContext) *unresolvedSubTest {
 }
 
 func findSubTestNameFromBasicLit(lit *ast.BasicLit) *literalSubTestName {
-	if lit.Kind != token.STRING {
+	name, ok := stringLiteralValue(lit)
+	if !ok {
 		return nil
 	}
 	return &literalSubTestName{
-		name: strings.Trim(lit.Value, `"`),
+		name: name,
 	}
 }
 
@@ -623,11 +625,10 @@ func (c *mapLiteralDeclarationContext) extractTestCaseNames() []string {
 		if !ok {
 			continue
 		}
-		key, ok := kv.Key.(*ast.BasicLit)
-		if !ok || key.Kind != token.STRING {
+		n, ok := stringLiteralValue(kv.Key)
+		if !ok {
 			continue
 		}
-		n := strings.Trim(key.Value, `"`)
 		ns = append(ns, n)
 	}
 	return ns
@@ -647,7 +648,11 @@ func stringLiteralValue(expr ast.Expr) (string, bool) {
 	if !ok || lit.Kind != token.STRING {
 		return "", false
 	}
-	return strings.Trim(lit.Value, `"`), true
+	value, err := strconv.Unquote(lit.Value)
+	if err != nil {
+		return "", false
+	}
+	return value, true
 }
 
 type structSliceLiteralDeclarationContext struct {
@@ -666,18 +671,19 @@ func (c *structSliceLiteralDeclarationContext) extractTestCaseName(name string) 
 		for i, elt := range st.Elts {
 			switch e := elt.(type) {
 			case *ast.BasicLit:
-				if i == caseFieldIdx && e.Kind == token.STRING {
-					n := strings.Trim(e.Value, `"`)
+				if i == caseFieldIdx {
+					n, ok := stringLiteralValue(e)
+					if !ok {
+						continue
+					}
 					ns = append(ns, n)
 				}
 			case *ast.KeyValueExpr:
 				if keyIdent, ok := e.Key.(*ast.Ident); ok {
 					if keyIdent.Name == name {
-						if e, ok := e.Value.(*ast.BasicLit); ok {
-							if e.Kind == token.STRING {
-								n := strings.Trim(e.Value, `"`)
-								ns = append(ns, n)
-							}
+						n, ok := stringLiteralValue(e.Value)
+						if ok {
+							ns = append(ns, n)
 						}
 					}
 				}
