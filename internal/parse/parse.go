@@ -51,15 +51,30 @@ func processFile(path string, skipSubtests bool) ([]*tip.TestFunction, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse file %s: %w", path, err)
 	}
+	// Package-level contexts intentionally come only from this file. processFile
+	// does not combine declarations from other files in the same package.
+	packageContexts := findPackageLevelContexts(node.Decls)
 	testFunctions := make([]*tip.TestFunction, 0)
 	for _, decl := range node.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
 		if !ok || !isTestFunction(fn) {
 			continue
 		}
-		testFunctions = append(testFunctions, processTestFunction(fn, skipSubtests))
+		testFunctions = append(testFunctions, processTestFunction(fn, skipSubtests, packageContexts...))
 	}
 	return testFunctions, nil
+}
+
+func findPackageLevelContexts(decls []ast.Decl) []subTestContext {
+	contexts := make([]subTestContext, 0)
+	for _, decl := range decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		contexts = append(contexts, findSubTestContextsFromGenDecl(genDecl)...)
+	}
+	return contexts
 }
 
 func isTestFunction(fn *ast.FuncDecl) bool {
@@ -85,7 +100,7 @@ func isTestName(name string) bool {
 	return !unicode.IsLower(r)
 }
 
-func processTestFunction(fn *ast.FuncDecl, skipSubtests bool) *tip.TestFunction {
+func processTestFunction(fn *ast.FuncDecl, skipSubtests bool, cs ...subTestContext) *tip.TestFunction {
 	if skipSubtests {
 		return &tip.TestFunction{
 			Name: fn.Name.Name,
@@ -93,7 +108,7 @@ func processTestFunction(fn *ast.FuncDecl, skipSubtests bool) *tip.TestFunction 
 		}
 	}
 
-	unresolvedSubTests := findSubTests(fn.Body.List, testingTParamNames(fn.Type.Params))
+	unresolvedSubTests := findSubTests(fn.Body.List, testingTParamNames(fn.Type.Params), cs...)
 
 	subs := make([]*tip.SubTest, 0)
 	for _, sub := range unresolvedSubTests {
@@ -142,19 +157,33 @@ func findSubTests(stmts []ast.Stmt, testingTReceivers []string, cs ...subTestCon
 				newCs = append(newCs, c)
 			}
 		case *ast.DeclStmt:
-			newCs = append(newCs, findStringIdentContextsFromDeclStmt(s)...)
-			if c := findStringSliceLiteralDeclarationFromDeclStmt(s); c != nil {
-				newCs = append(newCs, c)
-			}
-			if c := findStructSliceLiteralDeclarationFromDeclStmt(s); c != nil {
-				newCs = append(newCs, c)
-			}
-			if c := findMapLiteralDeclarationFromDeclStmt(s); c != nil {
-				newCs = append(newCs, c)
+			if genDecl, ok := s.Decl.(*ast.GenDecl); ok {
+				newCs = append(newCs, findSubTestContextsFromGenDecl(genDecl)...)
 			}
 		}
 	}
 	return subs
+}
+
+func findSubTestContextsFromGenDecl(genDecl *ast.GenDecl) []subTestContext {
+	contexts := make([]subTestContext, 0)
+	for _, spec := range genDecl.Specs {
+		decl := &ast.DeclStmt{Decl: &ast.GenDecl{
+			Tok:   genDecl.Tok,
+			Specs: []ast.Spec{spec},
+		}}
+		contexts = append(contexts, findStringIdentContextsFromDeclStmt(decl)...)
+		if c := findStringSliceLiteralDeclarationFromDeclStmt(decl); c != nil {
+			contexts = append(contexts, c)
+		}
+		if c := findStructSliceLiteralDeclarationFromDeclStmt(decl); c != nil {
+			contexts = append(contexts, c)
+		}
+		if c := findMapLiteralDeclarationFromDeclStmt(decl); c != nil {
+			contexts = append(contexts, c)
+		}
+	}
+	return contexts
 }
 
 func isTestingTRunSelector(sel *ast.SelectorExpr, testingTReceivers []string) bool {
