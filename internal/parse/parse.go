@@ -182,6 +182,9 @@ func findSubTestContextsFromGenDecl(genDecl *ast.GenDecl) []subTestContext {
 		if c := findMapLiteralDeclarationFromDeclStmt(decl); c != nil {
 			contexts = append(contexts, c)
 		}
+		if c := findStructTypeDeclarationFromDeclStmt(decl); c != nil {
+			contexts = append(contexts, c)
+		}
 	}
 	return contexts
 }
@@ -488,7 +491,7 @@ func findSubTestNameFromSelectorExpr(sel *ast.SelectorExpr, cs ...subTestContext
 			if structSliceCtx.ident != forRangeCtx.iterIdent {
 				continue
 			}
-			n.cases = structSliceCtx.extractTestCaseName(n.field)
+			n.cases = structSliceCtx.extractTestCaseName(n.field, cs...)
 		}
 	}
 	return n
@@ -689,8 +692,35 @@ type structSliceLiteralDeclarationContext struct {
 	compLit *ast.CompositeLit
 }
 
-func (c *structSliceLiteralDeclarationContext) extractTestCaseName(name string) []string {
-	caseFieldIdx := c.findCaseNameFieldIndex(name)
+type structTypeDeclarationContext struct {
+	ident      string
+	structType *ast.StructType
+}
+
+func findStructTypeDeclarationFromDeclStmt(decl *ast.DeclStmt) *structTypeDeclarationContext {
+	genDecl, ok := decl.Decl.(*ast.GenDecl)
+	if !ok || genDecl.Tok != token.TYPE {
+		return nil
+	}
+	for _, spec := range genDecl.Specs {
+		typeSpec, ok := spec.(*ast.TypeSpec)
+		if !ok {
+			continue
+		}
+		structType, ok := typeSpec.Type.(*ast.StructType)
+		if !ok {
+			continue
+		}
+		return &structTypeDeclarationContext{
+			ident:      typeSpec.Name.Name,
+			structType: structType,
+		}
+	}
+	return nil
+}
+
+func (c *structSliceLiteralDeclarationContext) extractTestCaseName(name string, cs ...subTestContext) []string {
+	caseFieldIdx := c.findCaseNameFieldIndex(name, cs...)
 	ns := make([]string, 0)
 	for _, elt := range c.compLit.Elts {
 		st, ok := elt.(*ast.CompositeLit)
@@ -722,12 +752,37 @@ func (c *structSliceLiteralDeclarationContext) extractTestCaseName(name string) 
 	return ns
 }
 
-func (c *structSliceLiteralDeclarationContext) findCaseNameFieldIndex(name string) int {
-	if st, ok := c.compLit.Type.(*ast.ArrayType).Elt.(*ast.StructType); ok {
-		for i, field := range st.Fields.List {
-			if len(field.Names) == 1 && field.Names[0].Name == name {
-				return i
+func (c *structSliceLiteralDeclarationContext) findCaseNameFieldIndex(name string, cs ...subTestContext) int {
+	arrayType, ok := c.compLit.Type.(*ast.ArrayType)
+	if !ok {
+		return -1
+	}
+	switch elementType := arrayType.Elt.(type) {
+	case *ast.StructType:
+		return findStructFieldIndex(elementType, name)
+	case *ast.Ident:
+		for i := len(cs) - 1; i >= 0; i-- {
+			typeContext, ok := cs[i].(*structTypeDeclarationContext)
+			if ok && typeContext.ident == elementType.Name {
+				return findStructFieldIndex(typeContext.structType, name)
 			}
+		}
+	}
+	return -1
+}
+
+func findStructFieldIndex(structType *ast.StructType, name string) int {
+	index := 0
+	for _, field := range structType.Fields.List {
+		if len(field.Names) == 0 {
+			index++
+			continue
+		}
+		for _, fieldName := range field.Names {
+			if fieldName.Name == name {
+				return index
+			}
+			index++
 		}
 	}
 	return -1
