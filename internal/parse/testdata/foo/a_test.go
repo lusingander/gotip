@@ -12,6 +12,16 @@ func (fakeRunner) Run(name string, f func()) {
 	f()
 }
 
+var packageLevelTests = []struct {
+	name string
+	a    int
+	b    int
+	want int
+}{
+	{"package1", 1, 2, 3},
+	{"package2", 2, 3, 5},
+}
+
 func TestSimpleAddition(t *testing.T) {
 	a := 1
 	b := 2
@@ -101,6 +111,17 @@ func TestVarStructSlice(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.a + tt.b
+			if got != tt.want {
+				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPackageLevelStructSlice(t *testing.T) {
+	for _, tt := range packageLevelTests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.a + tt.b
 			if got != tt.want {
