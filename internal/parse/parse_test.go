@@ -122,6 +122,13 @@ func wantTestA() []*tip.TestFunction {
 			},
 		},
 		{
+			Name: "TestNamedStructSlicePositionalFields",
+			Subs: []*tip.SubTest{
+				{Name: "named1", Resolved: true, Subs: []*tip.SubTest{}},
+				{Name: "named2", Resolved: true, Subs: []*tip.SubTest{}},
+			},
+		},
+		{
 			Name: "TestVarStructSlice",
 			Subs: []*tip.SubTest{
 				{Name: "test1", Resolved: true, Subs: []*tip.SubTest{}},
@@ -280,6 +287,7 @@ func wantSkipSubtestsTestA() []*tip.TestFunction {
 		{Name: "TestStructSlicePositionalFields", Subs: []*tip.SubTest{}},
 		{Name: "TestStructSliceKeyedFields", Subs: []*tip.SubTest{}},
 		{Name: "TestNamedStructSlice", Subs: []*tip.SubTest{}},
+		{Name: "TestNamedStructSlicePositionalFields", Subs: []*tip.SubTest{}},
 		{Name: "TestVarStructSlice", Subs: []*tip.SubTest{}},
 		{Name: "TestPackageLevelStructSlice", Subs: []*tip.SubTest{}},
 		{Name: "TestNestedStructFieldName", Subs: []*tip.SubTest{}},

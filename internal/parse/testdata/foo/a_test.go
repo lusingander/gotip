@@ -99,6 +99,27 @@ func TestNamedStructSlice(t *testing.T) {
 	}
 }
 
+func TestNamedStructSlicePositionalFields(t *testing.T) {
+	type fixture struct {
+		value int
+		name  string
+		want  int
+	}
+	tests := []fixture{
+		{1, "named1", 2},
+		{2, "named2", 4},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.value * 2
+			if got != tt.want {
+				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestVarStructSlice(t *testing.T) {
 	var tests = []struct {
 		name string
