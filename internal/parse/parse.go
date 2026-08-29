@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -194,12 +195,7 @@ func isTestingTRunSelector(sel *ast.SelectorExpr, testingTReceivers []string) bo
 	if !ok {
 		return false
 	}
-	for _, receiver := range testingTReceivers {
-		if ident.Name == receiver {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(testingTReceivers, ident.Name)
 }
 
 func testingTParamNames(params *ast.FieldList) []string {
@@ -501,8 +497,8 @@ func findSubTestNameFromIdent(ident *ast.Ident, cs ...subTestContext) *identSubT
 	n := &identSubTestName{
 		name: ident.Name,
 	}
-	for i := len(cs) - 1; i >= 0; i-- {
-		switch c := cs[i].(type) {
+	for i, c := range slices.Backward(cs) {
+		switch c := c.(type) {
 		case *stringIdentContext:
 			if n.name == c.ident {
 				n.cases = []string{c.value}
@@ -523,8 +519,8 @@ func findSubTestNameFromIdent(ident *ast.Ident, cs ...subTestContext) *identSubT
 }
 
 func findStringSliceTestCaseNames(ident string, cs ...subTestContext) []string {
-	for i := len(cs) - 1; i >= 0; i-- {
-		stringSliceCtx, ok := cs[i].(*stringSliceLiteralDeclarationContext)
+	for _, c := range slices.Backward(cs) {
+		stringSliceCtx, ok := c.(*stringSliceLiteralDeclarationContext)
 		if !ok {
 			continue
 		}
@@ -536,8 +532,8 @@ func findStringSliceTestCaseNames(ident string, cs ...subTestContext) []string {
 }
 
 func findMapTestCaseNames(ident string, cs ...subTestContext) []string {
-	for i := len(cs) - 1; i >= 0; i-- {
-		mapCtx, ok := cs[i].(*mapLiteralDeclarationContext)
+	for _, c := range slices.Backward(cs) {
+		mapCtx, ok := c.(*mapLiteralDeclarationContext)
 		if !ok {
 			continue
 		}
@@ -618,7 +614,7 @@ func (u *unknownSubTestName) resolveTestName() ([]string, bool) {
 	return []string{""}, false
 }
 
-type subTestContext interface{}
+type subTestContext any
 
 type stringIdentContext struct {
 	ident string
@@ -761,8 +757,8 @@ func (c *structSliceLiteralDeclarationContext) findCaseNameFieldIndex(name strin
 	case *ast.StructType:
 		return findStructFieldIndex(elementType, name)
 	case *ast.Ident:
-		for i := len(cs) - 1; i >= 0; i-- {
-			typeContext, ok := cs[i].(*structTypeDeclarationContext)
+		for _, c := range slices.Backward(cs) {
+			typeContext, ok := c.(*structTypeDeclarationContext)
 			if ok && typeContext.ident == elementType.Name {
 				return findStructFieldIndex(typeContext.structType, name)
 			}

@@ -203,8 +203,8 @@ func validKeyName(key string) bool {
 	if _, ok := namedKeys[key]; ok {
 		return true
 	}
-	if strings.HasPrefix(key, "f") {
-		number, err := strconv.Atoi(strings.TrimPrefix(key, "f"))
+	if after, ok := strings.CutPrefix(key, "f"); ok {
+		number, err := strconv.Atoi(after)
 		return err == nil && number >= 1 && number <= 20
 	}
 	return false

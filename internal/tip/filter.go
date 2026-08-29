@@ -63,8 +63,8 @@ func (m packageMatcher) match(pkg string) bool {
 			return true
 		}
 
-		if strings.HasSuffix(pattern, "/...") {
-			base := strings.TrimSuffix(pattern, "/...")
+		if before, ok := strings.CutSuffix(pattern, "/..."); ok {
+			base := before
 			if packagePathContains(base, pkg) {
 				return true
 			}
@@ -84,8 +84,8 @@ func packagePathContains(base, pkg string) bool {
 
 func normalizePackagePattern(name string) string {
 	name = strings.TrimSuffix(name, "/")
-	if strings.HasSuffix(name, "/...") {
-		base := normalizePackageName(strings.TrimSuffix(name, "/..."))
+	if before, ok := strings.CutSuffix(name, "/..."); ok {
+		base := normalizePackageName(before)
 		if base == "." {
 			return "./..."
 		}

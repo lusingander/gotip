@@ -74,12 +74,12 @@ func keyLabel(k string) string {
 		return "Space"
 	}
 
-	var prefix string
+	var prefix strings.Builder
 	for {
 		matched := false
 		for _, modifier := range []string{"ctrl", "alt", "shift"} {
 			if remaining, ok := strings.CutPrefix(k, modifier+"+"); ok {
-				prefix += strings.ToUpper(modifier[:1]) + modifier[1:] + "-"
+				prefix.WriteString(strings.ToUpper(modifier[:1]) + modifier[1:] + "-")
 				k = remaining
 				matched = true
 				break
@@ -97,5 +97,5 @@ func keyLabel(k string) string {
 	case "pgdown":
 		k = "PgDown"
 	}
-	return prefix + k
+	return prefix.String() + k
 }
